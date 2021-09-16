@@ -1,0 +1,84 @@
+swagger: "2.0"
+info:
+  description: "This is mqtt-api handler API where all the background stuff happens"
+  version: "0.1.0"
+  title: "mqtt-opener"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "dongho@ekstrah.comma"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "localhost:5000"
+basePath: "/v1"
+tags:
+- name: "container"
+  description: "Everything about container"
+  externalDocs:
+    description: "Find out more"
+    url: "http://api.ekstrah.com/mqtt-opener"
+schemes:
+- "https"
+- "http"
+paths:
+  /container/{userID}:
+    post:
+      tags:
+      - "container"
+      summary: "create mqtt server basedon UserID"
+      description: ""
+      operationId: "createCT"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: body
+        name: userID
+        description: "Create Container based on userID"
+        required: true
+        schema:
+          $ref: "#/definitions/user"
+      responses:
+        "405":
+          description: "Invalid input"
+        "200":
+          description: "Returns Container Object. Look at ContainerOBJ on Models at the bottom"
+          schema:
+            $ref: '#/definitions/ContainerOBJ'
+      security:
+      - petstore_auth:
+        - "write:pets"
+        - "read:pets"
+securityDefinitions:
+  petstore_auth:
+    type: "oauth2"
+    authorizationUrl: "http://petstore.swagger.io/oauth/dialog"
+    flow: "implicit"
+    scopes:
+      write:pets: "modify pets in your account"
+      read:pets: "read your pets"
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+definitions:
+  user:
+    type: "object"
+    properties:
+      userID:
+        type: 'string'
+      CTName:
+        type: 'string'
+  ContainerOBJ:
+    type: "object"
+    properties:
+      port:
+        type: "integer"
+      containerID:
+        type: "string"
+      containerName:
+        type: "string"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"

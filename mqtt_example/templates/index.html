@@ -1,0 +1,18 @@
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Topic</th>
+        <th scope="col">Time-Stamp</th>
+        <th scope="col">Message</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for data in dbData %}
+        <tr>
+            <th scope="row">{{data['topic']}}</th>
+            <td>{{data['message']}}</td>
+            <td>{{data['time-stamp']}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+  </table>
