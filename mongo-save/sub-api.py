@@ -30,9 +30,9 @@ parser.add_argument('--topic', help="topic words eg; foo/bar", type=str)
 parser.add_argument('--user', help="specify username to access database", type=str, required=True)
 parser.add_argument('--ip', help="specify the ip address of container", type=str, required=True)
 parser.add_argument('--ctname', help="specify the container name", type=str, required=True)
-parser.add_argument('--cred', help="Provide mqtt user authentication option", type=str, required=True)
-parser.add_argument('--mqttu', help="provide mqtt User Name", type=str)
-parser.add_argument('--mqttp', help="provide mqtt User Password", type=str)
+parser.add_argument('--cred', help="Provide mqtt user authentication option", type=int, required=True)
+parser.add_argument('--mqttU', help="provide mqtt User Name", type=str)
+parser.add_argument('--mqttP', help="provide mqtt User Password", type=str)
 
 args = parser.parse_args()
 if args.topic == None:
@@ -45,7 +45,7 @@ user_name = args.user
 ip_addr = args.ip
 CTName = args.ctname
 
-client = pymongo.MongoClient("mongodb://127.0.0.1:27018/")
+client = pymongo.MongoClient("mongodb://172.17.0.1:27018/")
 mqttDB = client[user_name]
 
 
@@ -54,7 +54,7 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 if args.cred == 1:
-    client.username_pw_set(username=args.mqttu, password=args.mqttp)
+    client.username_pw_set(username=args.mqttU, password=args.mqttP)
 client.connect(ip_addr, port, 60)
 
 # Blocking call that processes network traffic, dispatches callbacks and

@@ -129,7 +129,7 @@ def devel():
         print(userName, passWord)
         username = get_username()
         dataToSend = {"type" : 1, "userID": username, "CTName": "None", "mqtt_user": userName, "mqtt_pwd": passWord}
-        res  = requests.post('http://127.0.0.1:5000/dev/create', json=dataToSend)
+        res  = requests.post('http://192.168.219.101:5000/dev/create', json=dataToSend)
         return render_template('view_containers.html', ct_body=resp_body, userID=username, form=form)
     return render_template('view_containers.html', ct_body=resp_body, userID=username)
 

@@ -44,7 +44,9 @@ def create_middle():
         mqttpwd = container_query['container_cred_pwd']
         if CTCreds == 0:
             arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + data['topic'] + " --ctname " + data["CTName"] + " --cred " + str(CTCreds)
-        ctn = client.containers.run("ekstrah/mqtt_sub:0.5", arg_cmd,  detach=True)
+        else:
+            arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + data['topic'] + " --ctname " + data["CTName"] + " --cred " + str(CTCreds) + " --mqttU " + mqttuser + " --mqttP " + mqttpwd
+        ctn = client.containers.run("ekstrah/mqtt_sub:0.6", arg_cmd,  detach=True, auto_remove=True)
         print(ctn.logs())
         create_dbController(CT_user, data['CTName'], ctn.name)
         return jsonify({'action': 'create handler', 'status': 'success', 'message': 'Successfully added', 'statusCode' : 1})
