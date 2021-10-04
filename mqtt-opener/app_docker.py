@@ -9,8 +9,8 @@ CORS(app)
 mongo = PyMongo(app, uri="mongodb://localhost:27017/userID")
 db = mongo.db
 client = docker.from_env()
-abs_path = "/home/ekstrah/Desktop/mqtt_web/mqtt-opener/"
-pas_config = "/home/ekstrah/Desktop/mqtt_web/mqtt-opener/config/mosquitto.conf"
+abs_path = "/app/"
+pas_config = "/app/config/mosquitto.conf"
 mqtt_config = """
 # Config file for mosquitto
 #
@@ -982,8 +982,10 @@ def create_container(data, CTName=None):
     if CTName == None:
         container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol, auto_remove=True)
         print(container.logs())
+        # container = client.containers.run(image='eclipse-mosquitto:latest', detach=True,  volumes=vol, auto_remove=True)
     else:
         container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol, name=CTName, auto_remove=True)
+        # container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, volumes=vol, name=CTName, auto_remove=True)
     if data['type'] == 1:
         ret_info = {'port': rand_port, 'container_id': container.id, 'container_name' : container.name, 'container_cred': data['type'], 'container_cred_user': mqtt_user, 'container_cred_pwd': mqtt_pwd}
     else:
