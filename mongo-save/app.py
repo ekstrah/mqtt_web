@@ -26,6 +26,7 @@ def hello_world():
 def create_middle():
     if request.method == "POST":
         data = request.get_json()
+        print(data)
         if data['userID'] == None or data['topic'] == None or data['CTName'] == None:
             return jsonify({'status': 'error', 'message': 'error in json data'})
         CT_port = 1883
@@ -46,7 +47,7 @@ def create_middle():
             arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + data['topic'] + " --ctname " + data["CTName"] + " --cred " + str(CTCreds)
         else:
             arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + data['topic'] + " --ctname " + data["CTName"] + " --cred " + str(CTCreds) + " --mqttU " + mqttuser + " --mqttP " + mqttpwd
-        ctn = client.containers.run("ekstrah/mqtt_sub:0.6", arg_cmd,  detach=True, auto_remove=True)
+        ctn = client.containers.run("ekstrah/mqtt_sub:0.7", arg_cmd,  detach=True, auto_remove=True)
         print(ctn.logs())
         create_dbController(CT_user, data['CTName'], ctn.name)
         return jsonify({'action': 'create handler', 'status': 'success', 'message': 'Successfully added', 'statusCode' : 1})
