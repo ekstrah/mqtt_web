@@ -1,5 +1,5 @@
+import docker
 from flask import Flask, jsonify, request
-import docker, random
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 
@@ -11,22 +11,26 @@ db = mongo.db
 client = docker.from_env()
 
 def create_dbController(userID, CTName, dbCTName):
+    #create_dbController calls container to feed mqtt message to database
     collection = db[userID]
     collection.update_one({"userID": userID, "CTName": CTName}, {"$set": {"dbController": 1, "dbCTName": dbCTName}})
 
 def delete_dbController(userID, CTName):
+    #delete_dbController deletes container that was feeding from mqtt
     collection = db[userID]
     collection.update_one({"userID": userID, "CTName": CTName}, {"$set": {"dbController": 0, "dbCTName": "None"}})
 
 @app.route("/")
 def hello_world():
+    #Just host web loading
     return "<p>Hello, World!</p>"
 
 @app.route('/dev/create', methods=["POST"])
 def create_middle():
+    #API Request that calls create_dbController
     if request.method == "POST":
         data = request.get_json()
-        if data['userID'] == None or data['topic'] == None or data['CTName'] == None:
+        if data['userID'] is None or data['topic'] is None or data['CTName'] is None:
             return jsonify({'status': 'error', 'message': 'error in json data'})
         CT_port = 1883
         CT_user = data['userID']
@@ -53,9 +57,10 @@ def create_middle():
 
 @app.route('/dev/delete', methods=["POST"])
 def delete_middle():
+    #API Call that calls database delete
     if request.method == "POST":
         data = request.get_json()
-        if data['userID'] == None or data['CTName'] == None:
+        if data['userID'] is None or data['CTName'] is None:
             return jsonify({'status': 'error', 'message': 'error in json data'})
         CT_user = data['userID']
         collection = db[CT_user]
@@ -72,4 +77,4 @@ def delete_middle():
 
 
 if __name__ == "__main__":
-     app.run(host='0.0.0.0', port=5555)
+    app.run(host='0.0.0.0', port=5555)

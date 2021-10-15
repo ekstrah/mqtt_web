@@ -1,23 +1,27 @@
-import paho.mqtt.client as mqtt
-import argparse
-import pymongo
+#Import essential libraries
 from datetime import datetime
+import argparse
+import paho.mqtt.client as mqtt
+import pymongo
 
-topic_channel = ""
-port = 1883
-ip_addr = "127.0.0.1"
-user_name = ""
 
-# The callback for when the client receives a CONNACK response from the server.
+
+#Essential Global Variable
+TOPIC_CHANNEL = ""
+PORT = 1883
+IP_ADDR = "127.0.0.1"
+USER_NAME = ""
+
 def on_connect(client, userdata, flags, rc):
+    #Connecting to existing MQTT Server
     print("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.subscribe(topic_channel)
+    client.subscribe(TOPIC_CHANNEL)
 
-# The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
+    #When Message is received
     print(msg.topic+" "+str(msg.payload))
     col = mqttDB[CTName]
     data = {'topic': str(msg.topic), 'message': str(msg.payload.decode('utf-8')), 'time-stamp': str(datetime.now())}
@@ -35,18 +39,18 @@ parser.add_argument('--mqttU', help="provide mqtt User Name", type=str)
 parser.add_argument('--mqttP', help="provide mqtt User Password", type=str)
 
 args = parser.parse_args()
-if args.topic == None:
-    topic_channel = "#"
+if args.topic is None:
+    TOPIC_CHANNEL = "#"
 else:
-    topic_channel = args.topic
+    TOPIC_CHANNEL = args.topic
 ##Initializing the environment variable
-port = 1883
-user_name = args.user
-ip_addr = args.ip
+PORT = 1883
+USER_NAME = args.user
+IP_ADDR = args.ip
 CTName = args.ctname
 
 client = pymongo.MongoClient("mongodb://172.17.0.1:27018/")
-mqttDB = client[user_name]
+mqttDB = client[USER_NAME]
 
 
 #Start MQTT Subscribe API
@@ -55,10 +59,6 @@ client.on_connect = on_connect
 client.on_message = on_message
 if args.cred == 1:
     client.username_pw_set(username=args.mqttU, password=args.mqttP)
-client.connect(ip_addr, port, 60)
+client.connect(IP_ADDR, PORT, 60)
 
-# Blocking call that processes network traffic, dispatches callbacks and
-# handles reconnecting.
-# Other loop*() functions are available that give a threaded interface and a
-# manual interface.
 client.loop_forever()

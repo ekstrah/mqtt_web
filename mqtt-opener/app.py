@@ -1,10 +1,15 @@
+#Importing Essential Libraries
+import os
+import platform
+import random
+from os import path
+import subprocess
+import shutil
+import time
 from flask import Flask, jsonify, request
-import docker, random
+import docker
 from flask_pymongo import PyMongo
 from flask_cors import CORS
-import os, platform
-from flask_restplus import Api
-api = Api(app)
 #Importing Environment
 
 
@@ -23,15 +28,15 @@ client = docker.from_env()
 
 #Program Config
 run_os = platform.system()
-abs_path = ""
-basic_mqtt_config = ""
+ABS_PATH = ""
+BASIC_MQTT_CONFIG = ""
 if run_os == "Windows":
     print("HI")
 else:
-    abs_path = os.environ['PWD']
-    basic_mqtt_config = abs_path + "/config_basic/."
+    ABS_PATH = os.environ['PWD']
+    BASIC_MQTT_CONFIG = ABS_PATH + "/config_basic/."
 
-mqtt_config = """
+MQTT_CONFIG = """
 # Config file for mosquitto
 #
 # See mosquitto.conf(5) for more information.
@@ -911,12 +916,15 @@ allow_anonymous false
 persistence true
 password_file /mosquitto/config/password.txt
 """
+
 # Essential Database Controller
 def database_controller_ad(resp_data, userID):
+    # simple database adding controller
     port = resp_data['port']
     container_name = resp_data['container_name']
 
     def manage_container_by_userID(port, container_name, userID):
+        #Adding data from port
         col = db['port']
         data = {'port': port, 'CTName': container_name, 'userID': userID}
         col.insert_one(data)
@@ -931,48 +939,44 @@ def database_controller_ad(resp_data, userID):
     manage_userID_container(port, container_name, userID, resp_data)
 
 def database_controller_rm(userID, CTName, port):
-    def find_port_by_CTName(CTName):
-        col = db[userID]
-        data = col.find_one({'CTName': CTName})
-        return data['port']
-
+    #Simple database removing controller
     def manage_container_by_userID_rm(port, container_name, userID):
+        #Adding port to database
         col = db['port']
         data = {'port': port, 'CTName': container_name, 'userID': userID}
-        resp = col.delete_one(data)
+        col.delete_one(data)
         return 0
 
     def manage_userID_container_rm(port, container_name, userID):
+        # Adding userid and port
         col = db[userID]
         data = {'userID': userID, 'port': port, 'CTName': container_name}
-        resp = col.delete_one(data)
+        col.delete_one(data)
     manage_container_by_userID_rm(port, CTName, userID)
     manage_userID_container_rm(port, CTName, userID)
 
 
 def is_port_available(port):
-    col = db['port']    
-    length_v2 = col.count_documents({'port': port})
+    # Checking whether the port is occupied or not
+    col = db['port'] 
+    length_v2 = col.count_documents({'port' : port})
     if  length_v2 < 1:
         return 1
     return 0
 
 def create_container(data, CTName=None):
+    # Creates container with random generated port
     flag = 0
-    while(flag == 0):
+    while flag == 0:
         rand_port = random.randint(20000, 30000)
         flag = is_port_available(rand_port)
     port_dict = {'1883/tcp' : ('0.0.0.0', rand_port) }
-    if data['type'] == 0: 
-        vol = {basic_mqtt_config: {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
+    if data['type'] == 0:
+        vol = {BASIC_MQTT_CONFIG: {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
     elif data['type'] == 1:
         mqtt_user = data['mqtt_user']
         mqtt_pwd = data['mqtt_pwd']
-        tmp_dir_path = abs_path + mqtt_user + "/"
-        from os import path
-        import subprocess
-        import shutil
-        import time
+        tmp_dir_path = ABS_PATH + mqtt_user + "/"
         if path.exists(tmp_dir_path):
             shutil.rmtree(tmp_dir_path)
             os.mkdir(tmp_dir_path )
@@ -981,21 +985,21 @@ def create_container(data, CTName=None):
         tmp_pwd_path = tmp_dir_path + "password.txt"
         tmp_config_path=tmp_dir_path+"mosquitto.conf"
         creds_str = mqtt_user+":"+mqtt_pwd
-        with open(tmp_pwd_path, "w") as f:
-            f.write(creds_str)
+        with open(tmp_pwd_path, "w", encoding="utf-8") as mqt_config_file:
+            mqt_config_file.write(creds_str)
         subprocess.call(['bash', './mqtt_pwd_gen.sh', tmp_pwd_path])
         time.sleep(2)
         subprocess.call(['chmod', '-R', '777', tmp_dir_path])
-        with open(tmp_config_path, "w") as f:
-            f.write(mqtt_config)
+        with open(tmp_config_path, "w", encoding="utf-8") as file_config:
+            file_config.write(MQTT_CONFIG)
         time.sleep(2)
         fin_tmp_dir_path = tmp_dir_path+"."
         subprocess.call(['chmod', '-R', '777', tmp_dir_path])
         subprocess.call(['chmod', '-R', '777', fin_tmp_dir_path])
         time.sleep(2)
         vol = {fin_tmp_dir_path : {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
-    if CTName == None:
-        container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol)
+    if CTName is None:
+        container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol, auto_remove=True)
     else:
         container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol, name=CTName, auto_remove=True)
     if data['type'] == 1:
@@ -1003,8 +1007,9 @@ def create_container(data, CTName=None):
     else:
         ret_info = {'port': rand_port, 'container_id': container.id, 'container_name' : container.name, 'container_cred': data['type'], 'container_cred_user': "None", 'container_cred_pwd': "None"}
     return ret_info
-# Flask App code starts from here
-    
+
+
+
 @app.route("/")
 def hello_world():
     return "<p>Hello, World!</p>"
@@ -1012,25 +1017,64 @@ def hello_world():
 
 @app.route('/dev/create', methods=['POST', 'GET'])
 def create_new_container():
+    # API Call that creates container and adding datas into database
     if request.method == 'POST':
-        CTName = None
         data = request.get_json()
-        if data['userID'] == None:
-            return jsonify({'action': 'create', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
+        if data['userID'] is None:
+            return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
         if data['CTName'] != "None":
             resp_data = create_container(data, CTName=data['CTName'])
         else:
             resp_data = create_container(data)
         database_controller_ad(resp_data, data['userID'])
-        return jsonify({'action': 'create', 'status': 'success', 'message': 'Successfully Added', 'statusCode' : 1})
+        return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'Successfully Added', 'statusCode' : 1})
     if request.method == 'GET':
-        return jsonify({'action': 'create', 'status': 'success', 'message': 'Get Request made', 'statusCode' : -1})
+        return jsonify({'action': 'create_mqtt', 'status': 'failed', 'message': 'Unrelevant Request', 'statusCode' : -1})
 
 @app.route('/dev/delete', methods=['POST', 'GET'])
 def delete_old_container():
+    # API Call that close running container with removing all data that is saved on database
     if request.method == "POST":
         data = request.get_json()
-        if data['userID'] == None or data['CTName'] == None or data['port'] == None:
+        if data['userID'] is None or data['CTName'] is None or data['port'] is None:
+            return jsonify({'status': 'error', 'message': 'error in json data'})
+        CTName = data['CTName']
+        userID = data['userID']
+        port = data['port']
+        try:
+            container = client.containers.get(CTName)
+        except docker.errors.NotFound:
+            return jsonify({'action': 'delete', 'status': 'error', 'message' : "can't find the container with given name", 'statusCode': -1})
+        container.stop()
+        database_controller_rm(userID, CTName, port)
+        return jsonify({'action': 'delete', 'status': 'success', 'message': 'Successfully removed', 'statusCode' : 1})
+    else:
+        return jsonify({'action': 'delete', 'status': 'failure', 'message': 'Other request received which is not implemented', 'statusCode': -1})
+
+
+
+@app.route('/v1/create', methods=['POST', 'GET'])
+def create_new_container():
+    # API Call that creates container and adding datas into database
+    if request.method == 'POST':
+        data = request.get_json()
+        if data['userID'] is None:
+            return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
+        if data['CTName'] != "None":
+            resp_data = create_container(data, CTName=data['CTName'])
+        else:
+            resp_data = create_container(data)
+        database_controller_ad(resp_data, data['userID'])
+        return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'Successfully Added', 'statusCode' : 1})
+    if request.method == 'GET':
+        return jsonify({'action': 'create_mqtt', 'status': 'failed', 'message': 'Unrelevant Request', 'statusCode' : -1})
+
+@app.route('/v1/delete', methods=['POST', 'GET'])
+def delete_old_container():
+    # API Call that close running container with removing all data that is saved on database
+    if request.method == "POST":
+        data = request.get_json()
+        if data['userID'] is None or data['CTName'] is None or data['port'] is None:
             return jsonify({'status': 'error', 'message': 'error in json data'})
         CTName = data['CTName']
         userID = data['userID']
@@ -1046,4 +1090,4 @@ def delete_old_container():
         return jsonify({'action': 'delete', 'status': 'failure', 'message': 'Other request received which is not implemented', 'statusCode': -1})
 
 if __name__ == "__main__":
-     app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000)
