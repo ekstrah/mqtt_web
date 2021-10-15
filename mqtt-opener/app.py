@@ -2,15 +2,32 @@ from flask import Flask, jsonify, request
 import docker, random
 from flask_pymongo import PyMongo
 from flask_cors import CORS
-import os
+import os, platform
 #Importing Environment
+
+
+
+#Flask Config
 app = Flask(__name__)
 CORS(app)
+
+#MongoDB Config
 mongo = PyMongo(app, uri="mongodb://localhost:27017/userID")
 db = mongo.db
+
+#Docker Config
 client = docker.from_env()
-abs_path = "/home/ekstrah/Desktop/mqtt_web/mqtt-opener/"
-pas_config = "/home/ekstrah/Desktop/mqtt_web/mqtt-opener/config/mosquitto.conf"
+
+
+#Program Config
+run_os = platform.system()
+abs_path = ""
+basic_mqtt_config = ""
+if run_os == "Windows":
+    print("HI")
+else:
+    abs_path = os.environ['PWD']
+    basic_mqtt_config = abs_path + "/config_basic/."
 mqtt_config = """
 # Config file for mosquitto
 #
@@ -946,13 +963,12 @@ def create_container(data, CTName=None):
         rand_port = random.randint(20000, 30000)
         flag = is_port_available(rand_port)
     port_dict = {'1883/tcp' : ('0.0.0.0', rand_port) }
-    if data['type'] == 0: #Create Simple Container
-        vol = {'/home/ekstrah/Desktop/mqtt_web/mqtt-opener/config_basic/.' : {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
+    if data['type'] == 0: 
+        vol = {basic_mqtt_config: {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
     elif data['type'] == 1:
         mqtt_user = data['mqtt_user']
         mqtt_pwd = data['mqtt_pwd']
-        #We need to create directory for user and remove it
-        tmp_dir_path = abs_path+mqtt_user + "/"
+        tmp_dir_path = abs_path + mqtt_user + "/"
         from os import path
         import subprocess
         import shutil
@@ -962,7 +978,6 @@ def create_container(data, CTName=None):
             os.mkdir(tmp_dir_path )
         else:
             os.mkdir(tmp_dir_path)
-        
         tmp_pwd_path = tmp_dir_path + "password.txt"
         tmp_config_path=tmp_dir_path+"mosquitto.conf"
         creds_str = mqtt_user+":"+mqtt_pwd
@@ -980,8 +995,7 @@ def create_container(data, CTName=None):
         time.sleep(2)
         vol = {fin_tmp_dir_path : {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
     if CTName == None:
-        container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol, auto_remove=True)
-        print(container.logs())
+        container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol)
     else:
         container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol, name=CTName, auto_remove=True)
     if data['type'] == 1:
@@ -998,7 +1012,6 @@ def hello_world():
 
 @app.route('/dev/create', methods=['POST', 'GET'])
 def create_new_container():
-    print("hiß")
     if request.method == 'POST':
         CTName = None
         data = request.get_json()

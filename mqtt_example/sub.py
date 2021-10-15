@@ -15,8 +15,8 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.username_pw_set(username="test", password="test")
-client.connect("127.0.0.1", 29097, 30)
+# client.username_pw_set(username="test", password="test")
+client.connect("127.0.0.1", 20629, 30)
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
