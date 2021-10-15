@@ -6,3 +6,4 @@ __pycache__/
 
 # Virtualenv Directory
 env/
+.DS_Store

@@ -3,6 +3,8 @@ import docker, random
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 import os, platform
+from flask_restplus import Api
+api = Api(app)
 #Importing Environment
 
 
@@ -28,6 +30,7 @@ if run_os == "Windows":
 else:
     abs_path = os.environ['PWD']
     basic_mqtt_config = abs_path + "/config_basic/."
+
 mqtt_config = """
 # Config file for mosquitto
 #
@@ -931,21 +934,18 @@ def database_controller_rm(userID, CTName, port):
     def find_port_by_CTName(CTName):
         col = db[userID]
         data = col.find_one({'CTName': CTName})
-        print("found port %d".format(data['port']))
         return data['port']
 
     def manage_container_by_userID_rm(port, container_name, userID):
         col = db['port']
         data = {'port': port, 'CTName': container_name, 'userID': userID}
         resp = col.delete_one(data)
-        print("deleted ", resp)
         return 0
 
     def manage_userID_container_rm(port, container_name, userID):
         col = db[userID]
         data = {'userID': userID, 'port': port, 'CTName': container_name}
         resp = col.delete_one(data)
-        print("deleted ", resp)
     manage_container_by_userID_rm(port, CTName, userID)
     manage_userID_container_rm(port, CTName, userID)
 
@@ -1015,7 +1015,6 @@ def create_new_container():
     if request.method == 'POST':
         CTName = None
         data = request.get_json()
-        print(data)
         if data['userID'] == None:
             return jsonify({'action': 'create', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
         if data['CTName'] != "None":
@@ -1036,12 +1035,10 @@ def delete_old_container():
         CTName = data['CTName']
         userID = data['userID']
         port = data['port']
-        print(CTName, userID, port)
         try:
             container = client.containers.get(CTName)
         except docker.errors.NotFound:
             return jsonify({'action': 'delete', 'status': 'error', 'message' : "can't find the container with given name", 'statusCode': -1})
-        print(container.name)
         container.stop()
         database_controller_rm(userID, CTName, port)
         return jsonify({'action': 'delete', 'status': 'success', 'message': 'Successfully removed', 'statusCode' : 1})
