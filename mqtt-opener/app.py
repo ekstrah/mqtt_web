@@ -1016,7 +1016,7 @@ def hello_world():
 
 
 @app.route('/dev/create', methods=['POST', 'GET'])
-def create_new_container():
+def create_dev_new_container():
     # API Call that creates container and adding datas into database
     if request.method == 'POST':
         data = request.get_json()
@@ -1032,7 +1032,7 @@ def create_new_container():
         return jsonify({'action': 'create_mqtt', 'status': 'failed', 'message': 'Unrelevant Request', 'statusCode' : -1})
 
 @app.route('/dev/delete', methods=['POST', 'GET'])
-def delete_old_container():
+def delete_old_dev_container():
     # API Call that close running container with removing all data that is saved on database
     if request.method == "POST":
         data = request.get_json()
