@@ -52,7 +52,7 @@ def check_user_account(user):
     data = userCollection.find_one({"userName": user['username'], "password": user['password']})
     if not data or data['isVerified'] == 0:
         return False
-    elif data['password'] == user['password'] and data['isVerified'] != 0:
+    elif data['password'] == user['password'] and data:
         userCollection.update_one({"userName": user["username"], "password": user["password"]}, {"$set": {"csrf_token": user['csrf_token']}})
         return True
     return False
@@ -70,6 +70,9 @@ simple_login = SimpleLogin(app, login_checker=check_user_account)
 def index():
     return render_template("index.html", )
 
+@app.route("/test")
+def test_example():
+    return render_template("test.html")
 
 @app.route("/secret")
 @login_required()
@@ -165,7 +168,6 @@ def register():
 
 @app.route("/<userID>/<CTName>")
 def dbDisplay(userID, CTName):
-    # We need to add reference check so that only the user can access to user information   
     print(userID, CTName)
     msgDB = msgClient[userID]
     col = msgDB[CTName]

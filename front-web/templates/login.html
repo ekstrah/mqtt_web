@@ -15,8 +15,8 @@
        <form action="{{ url_for('simplelogin.login') }}" method="post">
             <div class="form-group">
             {{ form.csrf_token }}
-            {{form.username.label}}<div class="form-control">{{ form.username }}</div><br>
-            {{form.password.label}}<div class="form-control"> {{ form.password }}</div><br>
+            <label for="formGroupExampleInput">Username</label><br>{{ form.username }}<br>
+            <label for="formGroupExampleInput">Password</label><br>{{ form.password }}<br>
             {% if next %}<input type="hidden" name="next" value="{{next}}">{% endif %}
             </form>
            <input type="submit" value="Send">
