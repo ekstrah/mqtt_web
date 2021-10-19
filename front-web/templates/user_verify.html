@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Secret{% endblock %}
+
+{% block page_body %}
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Account</th>
+        <th scope="col">Activate</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for account in unVerifiedAccount %}
+        <tr>
+            <th scope="row">{{account}}</th>
+            <th scope="row"><button type="button" class="btn btn-info" onclick="activate_user('{{account}}')">Activate</button></th>
+        </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+  <script>
+    function activate_user(userName) {
+        var xhr = new XMLHttpRequest(); 
+        var url = "http://localhost:5500/activate";
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState ===4 && xhr.status === 200) {
+                var json = JSON.parse(xhr.responseText);
+                console.log(json)
+            }
+        };
+        const parse_data = {
+            "userName" : userName
+        }
+        var data = JSON.stringify(parse_data);
+        xhr.send(data);
+        location.reload();
+    }
+
+//     function create_container_simple(userID) {
+//     var xhr = new XMLHttpRequest(); 
+//     var url = "http://localhost:5000/dev/create";
+//     xhr.open("POST", url, true);
+//     xhr.setRequestHeader("Content-Type", "application/json");
+//     xhr.onreadystatechange = function () {
+//       if (xhr.readyState === 4 && xhr.status === 200) {
+//         var json = JSON.parse(xhr.responseText);
+//         console.log(json)
+//       }
+//     };
+//     const parse_data = {
+//       "type": 0,
+//       "userID": userID,
+//       "CTName" : "None"
+//     };
+//     var data = JSON.stringify(parse_data);
+//     xhr.send(data);
+//     location.reload();
+//   }
+</script>
+{% endblock %}
+

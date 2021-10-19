@@ -1,13 +1,13 @@
+import requests
 from flask import Flask, jsonify, render_template, request, redirect, flash, url_for
 from flask.views import MethodView
 from flask_simplelogin import SimpleLogin, get_username, login_required
 import pymongo
 from flask_cors import CORS
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
-import requests
 
-
-
+init_account = {"userName": "ekstrah", "password": "ulsan2015", "isAdmin": 1, "csrf_token": "None", "isVerified": 3}
+dummy_account = {"userName": "test", "password": "test", "isAdmin": 0, "csrf_token": "None", "isVerified": 0}
 client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 msgClient = pymongo.MongoClient("mongodb://127.0.0.1:27018/")
 dbUserID = client['userID']
@@ -39,24 +39,20 @@ class ProtectedView(MethodView):
     def get(self):
         return "You are logged in as <b>{0}</b>".format(get_username())
 
-
-init_account = {"userName": "ekstrah", "password": "ulsan2015", "isAdmin": 1, "csrf_token": "None"}
-
-
 def inititialize_start_account():
     vl = userCollection.count_documents(init_account)
     if vl < 1:
         userCollection.insert_one(init_account)
+        userCollection.insert_one(dummy_account)
     else:
         print("admin account already exist")
 
 
 def check_user_account(user):
     data = userCollection.find_one({"userName": user['username'], "password": user['password']})
-    print(data)
-    if not data:
+    if not data or data['isVerified'] == 0:
         return False
-    elif data['password'] == user['password']:
+    elif data['password'] == user['password'] and data['isVerified'] != 0:
         userCollection.update_one({"userName": user["username"], "password": user["password"]}, {"$set": {"csrf_token": user['csrf_token']}})
         return True
     return False
@@ -87,16 +83,24 @@ def api():
     return jsonify(data="You are logged in with basic auth")
 
 
-def be_admin(username):
+def be_admin(user):
     """Validator to check if user has admin role"""
-    user_data = my_users.get(username)
-    if not user_data or "admin" not in user_data.get("roles", []):
+    data = userCollection.find_one({"userName": user})
+    if data['isAdmin'] != 1:
         return "User does not have admin role"
 
 
 def have_approval(username):
     """Validator: all users approved, return None"""
     return
+
+@app.route("/activate", methods=["POST"])
+def activate_account():
+    if request.method == "POST":
+        data = request.get_json()
+        username = data['userName']
+        userCollection.update_one({"userName": username}, {"$set": {"isVerified": 1}})
+    return jsonify({"status": "success"})
 
 
 @app.route("/complex")
@@ -133,7 +137,7 @@ def devel():
         return render_template('view_containers.html', ct_body=resp_body, userID=username, form=form)
     return render_template('view_containers.html', ct_body=resp_body, userID=username)
 
-init_account = {"userName": "ekstrah", "password": "ulsan2015", "isAdmin": 1, "csrf_token": "None"}
+
 
 
 def inititialize_start_account():
@@ -147,7 +151,7 @@ def inititialize_start_account():
 def register():
     form = RegistrationForm(request.form)
     if request.method == 'POST' and form.validate():
-        userInit = {"userName": form.username.data, "password": form.password.data, "isAdmin": 0, "csrf_token": "None"}
+        userInit = {"userName": form.username.data, "password": form.password.data, "isAdmin": 0, "csrf_token": "None", "isVerified": 0}
         vl =userCollection.count_documents(userInit)
         if vl > 0:
             flash("Either user exist or username is already taken")
@@ -173,7 +177,16 @@ def dbDisplay(userID, CTName):
 
 
 
-
+@app.route("/complex_admin")
+@login_required(must=[be_admin])
+def complex_view():
+    username = get_username()
+    data = userCollection.find({"isVerified": 0})
+    unVerifiedAccount = []
+    for account in data:
+        unVerifiedAccount.append(account["userName"])
+    print(unVerifiedAccount)
+    return render_template("user_verify.html",unVerifiedAccount=unVerifiedAccount)
 
 app.add_url_rule("/protected", view_func=ProtectedView.as_view("protected"))
 
