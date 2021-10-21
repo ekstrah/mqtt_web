@@ -5,6 +5,7 @@ from flask_simplelogin import SimpleLogin, get_username, login_required
 import pymongo
 from flask_cors import CORS
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
+import json
 
 init_account = {"userName": "ekstrah", "password": "ulsan2015", "isAdmin": 1, "csrf_token": "None", "isVerified": 3}
 dummy_account = {"userName": "test", "password": "test", "isAdmin": 0, "csrf_token": "None", "isVerified": 0}
@@ -168,14 +169,33 @@ def register():
 
 @app.route("/<userID>/<CTName>")
 def dbDisplay(userID, CTName):
-    print(userID, CTName)
     msgDB = msgClient[userID]
     col = msgDB[CTName]
-    dbData = col.find()
-    test_data = col.find_one()
-    print(test_data)
-    return render_template('database_display.html', dbData=dbData, CTName=CTName, userID=userID)
+    topics = col.distinct('topic')
+    return render_template('topic_list.html', CTName=CTName, userID=userID, topics=topics)
 
+@app.route("/<userID>/<CTName>/", strict_slashes=False)
+@app.route("/<userID>/<CTName>/<path:topic>/json")
+def dbDisplayJson(userID, CTName, topic):
+    msgDB = msgClient[userID]
+    col = msgDB[CTName]
+    dbData = col.find({"topic": topic})
+    table_data = []
+    for data in dbData:
+        table_data.append(json.loads(data['message']))
+    s_data = col.find_one({"topic": topic})
+    dict_keys = json.loads(s_data['message'])
+    keys = list(dict_keys.keys())
+    return render_template('database_display_json.html', CTName=CTName, topic=topic, keys=keys, table_data=table_data)
+
+
+@app.route("/<userID>/<CTName>/", strict_slashes=False)
+@app.route("/<userID>/<CTName>/<path:topics>/string")
+def dbDisplayString(userID, CTName, topics):
+    msgDB = msgClient[userID]
+    col = msgDB[CTName]
+    dbData = col.find({"topic": topics})
+    return render_template('database_display.html', CTName=CTName, topic=topics, dbData=dbData)
 
 
 

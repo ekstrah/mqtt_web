@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ get_username() }}{% endblock %}
+{% block page_body %}
+<h1>{{ userID }} Panel on {{CTName}}</h1>
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Topic</th>
+        <th scope="col">String View</th>
+        <th scope="col">Json View</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for topic in topics %}
+        <tr>
+            <th scope="row">{{topic}}</th>
+            <td><button type="button" class="btn btn-outline-dark" onclick="window.location.href='{{ url_for('dbDisplayString',userID=userID, CTName=CTName, topics=topic)}}';">View</button></td>
+            <td><button type="button" class="btn btn-outline-dark" onclick="window.location.href='{{ url_for('dbDisplayJson',userID=userID, CTName=CTName, topic=topic)}}';">View</button></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+  <script>
+
+  </script>
+{% endblock %}

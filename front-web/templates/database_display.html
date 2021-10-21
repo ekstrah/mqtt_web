@@ -1,19 +1,17 @@
 {% extends "base.html" %}
 {% block title %}{{ get_username() }}{% endblock %}
 {% block page_body %}
-<h1>{{ userID }} Panel on {{CTName}}</h1>
+<h1>{{ userID }} Panel on {{CTName}} with Topic {{topic}}</h1>
 <table class="table">
     <thead>
       <tr>
-        <th scope="col">Topic</th>
-        <th scope="col">Time-Stamp</th>
         <th scope="col">Message</th>
+        <th scope="col">Time-Stamp</th>
       </tr>
     </thead>
     <tbody>
         {% for data in dbData %}
         <tr>
-            <th scope="row">{{data['topic']}}</th>
             <td>{{data['message']}}</td>
             <td>{{data['time-stamp']}}</td>
         </tr>

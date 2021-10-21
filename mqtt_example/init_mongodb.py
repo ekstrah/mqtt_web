@@ -1,10 +1,7 @@
 import pymongo
 
-client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-db = client['userID']
-collection = db['ekstrah']
-data = {'userID': 'ekstrah', 'port': 1883, 'CTName': 'mqtt_dev'}
-x = collection.insert_one(data)
-collection = db.port
-data = {'CTName': 'testy', 'port': 1883, 'userID': 'ekstrah'}
+client = pymongo.MongoClient("mongodb://127.0.0.1:27018/")
+db = client['test']
+collection = db['my_coll']
+data = {"component": "hello World", "path": "/home/user/ekstrah/Desktop", "dummy": "helloWorld"}
 x = collection.insert_one(data)

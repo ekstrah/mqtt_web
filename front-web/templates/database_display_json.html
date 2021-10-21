@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ get_username() }}{% endblock %}
+{% block page_body %}
+<h1>{{ userID }} Panel on {{CTName}} with Topic {{topic}}</h1>
+  <table style="width:100%" class="table">
+    <!-- table header -->
+    {% if keys %}
+    <thead class="thead-dark">
+    <tr>
+       {% for key in keys %}
+       <th> {{ key }} </th>
+       {% endfor %}
+    </tr>
+  </thead>
+    {% endif %}
+  <tbody>
+    <!-- table rows -->
+    {% for dict_item in table_data %}
+    <tr>
+       {% for key in keys %}
+       <td> {{ dict_item[key] }} </td>
+       {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+  </table>
+{% endblock %}

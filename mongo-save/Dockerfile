@@ -5,4 +5,4 @@ COPY . /app
  
 RUN pip install -r requirements.txt
  
-ENTRYPOINT ["python", "./mqtt_handler.py"]
+ENTRYPOINT ["python", "./sub-api.py"]
