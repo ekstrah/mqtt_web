@@ -134,7 +134,6 @@ def devel():
     elif request.method == 'POST' and form.validate():
         userName = form.username.data
         passWord = form.password.data
-        print(userName, passWord)
         username = get_username()
         dataToSend = {"type" : 1, "userID": username, "CTName": "None", "mqtt_user": userName, "mqtt_pwd": passWord}
         res  = requests.post('http://192.168.219.101:5000/dev/create', json=dataToSend)
@@ -172,7 +171,16 @@ def dbDisplay(userID, CTName):
     msgDB = msgClient[userID]
     col = msgDB[CTName]
     topics = col.distinct('topic')
-    return render_template('topic_list.html', CTName=CTName, userID=userID, topics=topics)
+    json_topic = {}
+    for topic in topics:
+        doc = col.find_one({'topic': topic})
+        try:
+            tmp = json.loads(doc['message'])
+            json_topic[topic] = 1
+        except json.decoder.JSONDecodeError:
+            json_topic[topic]= 0
+    json_keys = list(json_topic.keys())
+    return render_template('topic_list.html', CTName=CTName, userID=userID, topics=topics, json_keys=json_keys, json_topic=json_topic)
 
 @app.route("/<userID>/<CTName>/", strict_slashes=False)
 @app.route("/<userID>/<CTName>/<path:topic>/json")
@@ -207,7 +215,6 @@ def complex_view():
     unVerifiedAccount = []
     for account in data:
         unVerifiedAccount.append(account["userName"])
-    print(unVerifiedAccount)
     return render_template("user_verify.html",unVerifiedAccount=unVerifiedAccount)
 
 app.add_url_rule("/protected", view_func=ProtectedView.as_view("protected"))

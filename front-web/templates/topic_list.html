@@ -14,9 +14,14 @@
         {% for topic in topics %}
         <tr>
             <th scope="row">{{topic}}</th>
+            
             <td><button type="button" class="btn btn-outline-dark" onclick="window.location.href='{{ url_for('dbDisplayString',userID=userID, CTName=CTName, topics=topic)}}';">View</button></td>
+            {% if json_topic[topic] == 1%}
             <td><button type="button" class="btn btn-outline-dark" onclick="window.location.href='{{ url_for('dbDisplayJson',userID=userID, CTName=CTName, topic=topic)}}';">View</button></td>
-        </tr>
+            {% else %}
+            <td><button type="button" class="btn btn-outline-dark" onclick="window.location.href='{{ url_for('dbDisplayJson',userID=userID, CTName=CTName, topic=topic)}}';" disabled>View</button></td>
+            {% endif %}
+          </tr>
         {% endfor %}
     </tbody>
   </table>
