@@ -5,15 +5,15 @@
 <table class="table">
     <thead>
       <tr>
-        <th scope="col">Account</th>
-        <th scope="col">Activate</th>
+        <th scope="col">Username</th>
+        <th scope="col">Email</th>
       </tr>
     </thead>
     <tbody>
-        {% for account in unVerifiedAccount %}
+        {% for account in allAccount %}
         <tr>
-            <th scope="row">{{account}}</th>
-            <th scope="row"><button type="button" class="btn btn-info" onclick="activate_user('{{account}}')">Activate</button></th>
+            <th scope="row">{{account['uesrName']}}</th>
+            <th scope="row">{{account['email']}}</th>
         </tr>
         {% endfor %}
     </tbody>
@@ -22,7 +22,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12 bg-light text-right">
-                <button type="button" class="btn btn-dark" onclick="window.location.href='{{ url_for('viewAC')}}';">View All Accounts</button>
+                <button type="button" class="btn btn-dark" onclick="window.location.href='{{ url_for('complex_view')}}';">View Unverified Account</button>
             </div>
         </div>
     </div>

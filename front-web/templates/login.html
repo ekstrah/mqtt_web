@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block page_body %}
-       <form action="{{ url_for('simplelogin.login') }}" method="post">
+       <form action="{{ url_for('simplelogin.login', next='/dev') }}" method="post">
             <div class="form-group">
             {{ form.csrf_token }}
             <label for="formGroupExampleInput">Username</label><br>{{ form.username }}<br>

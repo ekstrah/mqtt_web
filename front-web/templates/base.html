@@ -69,7 +69,11 @@
             <a class="nav-link" href="{{url_for('register')}}">Register</a>
             {% endif %}
           </li>
-
+          {% if is_admin == 1 %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('complex_view')}}">User Control</a>
+          </li>
+          {% endif %}
         </ul>
       </div>
 {% endblock %}

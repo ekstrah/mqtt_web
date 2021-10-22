@@ -9,14 +9,13 @@ def on_connect(client, userdata, flags, rc):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    json.l
     print(msg.topic+" "+str(msg.payload))
 
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 # client.username_pw_set(username="test", password="test")
-client.connect("127.0.0.1", 24796, 30)
+client.connect("127.0.0.1", 25359, 30)
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.

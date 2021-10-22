@@ -7,8 +7,8 @@ from flask_cors import CORS
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
 import json
 
-init_account = {"userName": "ekstrah", "password": "ulsan2015", "isAdmin": 1, "csrf_token": "None", "isVerified": 3}
-dummy_account = {"userName": "test", "password": "test", "isAdmin": 0, "csrf_token": "None", "isVerified": 0}
+init_account = {"userName": "ekstrah", "password": "ulsan2015", "isAdmin": 1, "csrf_token": "None", "isVerified": 3, "email": "dongho@ekstrah.com"}
+dummy_account = {"userName": "test", "password": "test", "isAdmin": 0, "csrf_token": "None", "isVerified": 0, "email": "test@test.com"}
 client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 msgClient = pymongo.MongoClient("mongodb://127.0.0.1:27018/")
 dbUserID = client['userID']
@@ -67,6 +67,7 @@ inititialize_start_account()
 simple_login = SimpleLogin(app, login_checker=check_user_account)
 
 
+
 @app.route("/")
 def index():
     return render_template("index.html", )
@@ -86,6 +87,15 @@ def secret():
 def api():
     return jsonify(data="You are logged in with basic auth")
 
+@app.context_processor
+def is_admin():
+    user = get_username()
+    if user == None:
+        return dict(is_admin= 0)
+    data = userCollection.find_one({"userName": user})
+    if data['isAdmin'] == 1:
+        return dict(is_admin= 1)
+    return dict(is_admin = 0)
 
 def be_admin(user):
     """Validator to check if user has admin role"""
@@ -136,11 +146,9 @@ def devel():
         passWord = form.password.data
         username = get_username()
         dataToSend = {"type" : 1, "userID": username, "CTName": "None", "mqtt_user": userName, "mqtt_pwd": passWord}
-        res  = requests.post('http://192.168.219.101:5000/dev/create', json=dataToSend)
+        res  = requests.post('http://localhost:5000/dev/create', json=dataToSend)
         return render_template('view_containers.html', ct_body=resp_body, userID=username, form=form)
     return render_template('view_containers.html', ct_body=resp_body, userID=username)
-
-
 
 
 def inititialize_start_account():
@@ -154,7 +162,7 @@ def inititialize_start_account():
 def register():
     form = RegistrationForm(request.form)
     if request.method == 'POST' and form.validate():
-        userInit = {"userName": form.username.data, "password": form.password.data, "isAdmin": 0, "csrf_token": "None", "isVerified": 0}
+        userInit = {"userName": form.username.data, "password": form.password.data, "isAdmin": 0, "csrf_token": "None", "isVerified": 0, "email": form.email.data}
         vl =userCollection.count_documents(userInit)
         if vl > 0:
             flash("Either user exist or username is already taken")
@@ -207,7 +215,7 @@ def dbDisplayString(userID, CTName, topics):
 
 
 
-@app.route("/complex_admin")
+@app.route("/admin/verifyAC")
 @login_required(must=[be_admin])
 def complex_view():
     username = get_username()
@@ -216,6 +224,19 @@ def complex_view():
     for account in data:
         unVerifiedAccount.append(account["userName"])
     return render_template("user_verify.html",unVerifiedAccount=unVerifiedAccount)
+
+@app.route("/admin/viewAC")
+@login_required(must=[be_admin])
+def viewAC():
+    data = userCollection.find()
+    allAccount = []
+    print(data[0])
+    for account in data:
+        tmp = {}
+        tmp['uesrName'] = account["userName"]
+        tmp['email'] = account["email"]
+        allAccount.append(tmp)
+    return render_template("view_user.html", allAccount=allAccount)
 
 app.add_url_rule("/protected", view_func=ProtectedView.as_view("protected"))
 
