@@ -44,11 +44,11 @@ def create_middle():
         container_query = collection.find_one({"userID": CT_user, "CTName": data['CTName']})
         CTCreds = container_query['CTCreds']
         print(CTCreds)
-        mqttuser = container_query['container_cred_user']
-        mqttpwd = container_query['container_cred_pwd']
         if CTCreds == 0:
             arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + data['topic'] + " --ctname " + data["CTName"] + " --cred " + str(CTCreds)
         else:
+            mqttuser = container_query['container_cred_user']
+            mqttpwd = container_query['container_cred_pwd']
             arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + data['topic'] + " --ctname " + data["CTName"] + " --cred " + str(CTCreds) + " --mqttU " + mqttuser + " --mqttP " + mqttpwd
         ctn = client.containers.run("ekstrah/mqtt_sub:0.7", arg_cmd,  detach=True)
         print(ctn.logs())

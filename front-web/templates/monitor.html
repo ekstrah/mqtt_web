@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Index{% endblock %}
+
+{% block page_body %}
+<div class="card text-center">
+    <div class="card-header">
+      Server Status
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">Total Message Received</h5>
+      <p class="card-text">{{user_total}}</p>
+      <a href="#" class="btn btn-primary">View by User</a>
+    </div>
+    <div class="card-footer text-muted">
+        {{date_msg}}
+    </div>
+  </div>
+{% endblock %}

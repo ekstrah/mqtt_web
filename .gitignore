@@ -7,3 +7,4 @@ __pycache__/
 # Virtualenv Directory
 env/
 .DS_Store
+front-web/new_update/node_module

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mqttify</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+</head>
+
+<body>
+    <div class="fixed top-0 left-0 h-screen w-24 m-0 flex flex-col bg-gray-900 text-white shadow">
+        {% if is_logged_in() %}
+        <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 hover:bg-green-600 rounded-lg transition-all duration-300 ease-linear cursor-pointer" onclick="window.location.href={{url_for('profile_view')}}"><span class="fa fa-id-badge fa-2x"></span></i>
+        {% if counter > 0 %}
+        {% for ct in ct_body %}
+        <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 hover:bg-green-600 rounded-lg transition-all duration-300 ease-linear cursor-pointer" ><a href="{{ url_for('topicDisplay', CTName=ct['CTName'], userID=ct['userID']) }}"><span class="fa fa-bug fa-2x"></span></a></i>
+        {% endfor %}
+        {% endif %}
+        {% if is_admin == 1 %}
+        <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 hover:bg-green-600 rounded-lg transition-all duration-300 ease-linear cursor-pointer"><span class="fa fa-users-cog fa-2x"></span></i>
+        {% endif %}
+        <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 hover:bg-green-600 rounded-lg transition-all duration-300 ease-linear cursor-pointer"><span class="fa fa-plus fa-2x"></span></i>
+        {% else %}
+        <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 hover:bg-green-600 rounded-lg transition-all duration-300 ease-linear cursor-pointer" onclick="window.location.href={{url_for('home')}}"><span class="fa fa-home fa-2x"></span></i>
+        <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 hover:bg-green-600 rounded-lg transition-all duration-300 ease-linear cursor-pointer" onclick="window.location.href={{url_for('simplelogin.login')}}"><span class="fa fa-key fa-2x" ></span></i>
+        {% endif %}
+        <!-- <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 text-green-500">E</i> -->
+    </div>
+    {% block content %}{% endblock %}
+
+</body>
+
+</html>

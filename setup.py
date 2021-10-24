@@ -11,8 +11,8 @@ def initialie_database():
     container = client.containers.run("mongo:latest", name="credDB", ports={'27017/tcp': '27017'}, detach=True)
     #Run msgDB
     container = client.containers.run("mongo:latest", name="msgDB", ports={'27017/tcp': "27018"}, detach=True)
-
-
+    #Run monitorDB
+    container = client.containers.run("mongo:latest", name="monitorDB", ports={'27017/tcp': "27019"}, detach=True)
 if __name__ == "__main__":
     initialie_database()
 

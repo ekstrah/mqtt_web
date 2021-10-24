@@ -10,6 +10,7 @@ from flask import Flask, jsonify, request
 import docker
 from flask_pymongo import PyMongo
 from flask_cors import CORS
+
 #Importing Environment
 
 
@@ -917,6 +918,34 @@ persistence true
 password_file /mosquitto/config/password.txt
 """
 
+
+
+
+def monitor_mqtt_broker(userID, CTName, port):
+    CT_port = 1883
+    CT_user = userID
+    collection = db[userID]
+    try:
+        container = client.containers.get(CTName)
+    except docker.errors.NotFound:
+        return jsonify({'action': 'create handler', 'status': 'error', 'message' : "can't find the container with given name", 'statusCode': -1})
+    CT_ip = container.attrs['NetworkSettings']['IPAddress']
+    container_query = collection.find_one({"userID": CT_user, "CTName": CTName})
+    CTCreds = container_query['CTCreds']
+    if CTCreds == 0:
+        arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + "#" + " --ctname " + CTName + " --cred " + str(CTCreds)
+    else:
+        mqttuser = container_query['container_cred_user']
+        mqttpwd = container_query['container_cred_pwd']
+        arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + "#" + " --ctname " + CTName + " --cred " + str(CTCreds) + " --mqttU " + mqttuser + " --mqttP " + mqttpwd
+    ctn = client.containers.run("ekstrah/monitor-api:0.1", arg_cmd,  detach=True, auto_remove=True)
+    return ctn
+
+def database_controller_monitor_update(resp_data, userID, ctn_name):
+    col = db[userID]
+    col.update_one({"userID": userID, "CTName": resp_data['container_name']}, {"$set": {"monitor_api_CTName" : ctn_name}})
+
+
 # Essential Database Controller
 def database_controller_ad(resp_data, userID):
     # simple database adding controller
@@ -931,33 +960,38 @@ def database_controller_ad(resp_data, userID):
         return 0
 
     def manage_userID_container(port, container_name, userID, resp_data):
-        # data = {'userID': 'ekstrah', 'port': 1883, 'CTName': 'mqtt_dev'}
         col = db[userID]
-        data = {'userID': userID, 'port': port, 'CTName': container_name, "dbController": 0, "dbCTName": "None", "CTCreds": resp_data['container_cred'], 'container_cred_user': resp_data['container_cred_user'], 'container_cred_pwd': resp_data['container_cred_pwd']}
+        data = {'userID': userID, 'port': port, 'CTName': container_name, "dbController": 0, "dbCTName": "None", "CTCreds": resp_data['container_cred'], 'container_cred_user': resp_data['container_cred_user'], 'container_cred_pwd': resp_data['container_cred_pwd'], "monitor_api_CTName": "None"}
         col.insert_one(data)
     manage_container_by_userID(port, container_name, userID)
     manage_userID_container(port, container_name, userID, resp_data)
 
 def database_controller_rm(userID, CTName, port):
-    #Simple database removing controller
+    def manage_monitor_api_rm(userID, CTName):
+        col = db[userID]
+        ct = col.find_one({'userID': userID, 'CTName': CTName})
+        try:
+            container = client.containers.get(ct['monitor_api_CTName'])
+        except docker.errors.NotFound:
+            return False
+        container.stop()
+
     def manage_container_by_userID_rm(port, container_name, userID):
-        #Adding port to database
         col = db['port']
         data = {'port': port, 'CTName': container_name, 'userID': userID}
         col.delete_one(data)
         return 0
 
     def manage_userID_container_rm(port, container_name, userID):
-        # Adding userid and port
         col = db[userID]
         data = {'userID': userID, 'port': port, 'CTName': container_name}
         col.delete_one(data)
+    manage_monitor_api_rm(userID, CTName)
     manage_container_by_userID_rm(port, CTName, userID)
     manage_userID_container_rm(port, CTName, userID)
 
 
 def is_port_available(port):
-    # Checking whether the port is occupied or not
     col = db['port'] 
     length_v2 = col.count_documents({'port' : port})
     if  length_v2 < 1:
@@ -965,12 +999,12 @@ def is_port_available(port):
     return 0
 
 def create_container(data, CTName=None):
-    # Creates container with random generated port
     flag = 0
     while flag == 0:
         rand_port = random.randint(20000, 30000)
         flag = is_port_available(rand_port)
-    port_dict = {'1883/tcp' : ('0.0.0.0', rand_port) }
+    port_dict = {'1883/tcp' : ('0.0.0.0', rand_port)}
+    userID = data["userID"]
     if data['type'] == 0:
         vol = {BASIC_MQTT_CONFIG: {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
     elif data['type'] == 1:
@@ -1000,13 +1034,15 @@ def create_container(data, CTName=None):
         vol = {fin_tmp_dir_path : {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
     if CTName is None:
         container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol, auto_remove=True)
+        CTName = container.name
     else:
         container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol, name=CTName, auto_remove=True)
+        CTName = container.name
     if data['type'] == 1:
         ret_info = {'port': rand_port, 'container_id': container.id, 'container_name' : container.name, 'container_cred': data['type'], 'container_cred_user': mqtt_user, 'container_cred_pwd': mqtt_pwd}
     else:
         ret_info = {'port': rand_port, 'container_id': container.id, 'container_name' : container.name, 'container_cred': data['type'], 'container_cred_user': "None", 'container_cred_pwd': "None"}
-    return ret_info
+    return ret_info, userID, CTName, rand_port
 
 
 
@@ -1017,7 +1053,6 @@ def hello_world():
 
 @app.route('/dev/create', methods=['POST', 'GET'])
 def create_dev_new_container():
-    # API Call that creates container and adding datas into database
     if request.method == 'POST':
         data = request.get_json()
         if data['userID'] is None:
@@ -1025,15 +1060,16 @@ def create_dev_new_container():
         if data['CTName'] != "None":
             resp_data = create_container(data, CTName=data['CTName'])
         else:
-            resp_data = create_container(data)
+            resp_data, userID, CTName, rand_port = create_container(data)
         database_controller_ad(resp_data, data['userID'])
+        ctn = monitor_mqtt_broker(userID, CTName, rand_port)
+        database_controller_monitor_update(resp_data, data['userID'], ctn.name)
         return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'Successfully Added', 'statusCode' : 1})
     if request.method == 'GET':
         return jsonify({'action': 'create_mqtt', 'status': 'failed', 'message': 'Unrelevant Request', 'statusCode' : -1})
 
 @app.route('/dev/delete', methods=['POST', 'GET'])
 def delete_old_dev_container():
-    # API Call that close running container with removing all data that is saved on database
     if request.method == "POST":
         data = request.get_json()
         if data['userID'] is None or data['CTName'] is None or data['port'] is None:
@@ -1051,43 +1087,6 @@ def delete_old_dev_container():
     else:
         return jsonify({'action': 'delete', 'status': 'failure', 'message': 'Other request received which is not implemented', 'statusCode': -1})
 
-
-
-@app.route('/v1/create', methods=['POST', 'GET'])
-def create_new_container():
-    # API Call that creates container and adding datas into database
-    if request.method == 'POST':
-        data = request.get_json()
-        if data['userID'] is None:
-            return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
-        if data['CTName'] != "None":
-            resp_data = create_container(data, CTName=data['CTName'])
-        else:
-            resp_data = create_container(data)
-        database_controller_ad(resp_data, data['userID'])
-        return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'Successfully Added', 'statusCode' : 1})
-    if request.method == 'GET':
-        return jsonify({'action': 'create_mqtt', 'status': 'failed', 'message': 'Unrelevant Request', 'statusCode' : -1})
-
-@app.route('/v1/delete', methods=['POST', 'GET'])
-def delete_old_container():
-    # API Call that close running container with removing all data that is saved on database
-    if request.method == "POST":
-        data = request.get_json()
-        if data['userID'] is None or data['CTName'] is None or data['port'] is None:
-            return jsonify({'status': 'error', 'message': 'error in json data'})
-        CTName = data['CTName']
-        userID = data['userID']
-        port = data['port']
-        try:
-            container = client.containers.get(CTName)
-        except docker.errors.NotFound:
-            return jsonify({'action': 'delete', 'status': 'error', 'message' : "can't find the container with given name", 'statusCode': -1})
-        container.stop()
-        database_controller_rm(userID, CTName, port)
-        return jsonify({'action': 'delete', 'status': 'success', 'message': 'Successfully removed', 'statusCode' : 1})
-    else:
-        return jsonify({'action': 'delete', 'status': 'failure', 'message': 'Other request received which is not implemented', 'statusCode': -1})
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)

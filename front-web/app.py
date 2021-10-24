@@ -11,6 +11,7 @@ init_account = {"userName": "ekstrah", "password": "ulsan2015", "isAdmin": 1, "c
 dummy_account = {"userName": "test", "password": "test", "isAdmin": 0, "csrf_token": "None", "isVerified": 0, "email": "test@test.com"}
 client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 msgClient = pymongo.MongoClient("mongodb://127.0.0.1:27018/")
+monitorClient = pymongo.MongoClient("mongodb://127.0.0.1:27019/")
 dbUserID = client['userID']
 app = Flask(__name__)
 CORS(app)
@@ -190,6 +191,9 @@ def dbDisplay(userID, CTName):
     json_keys = list(json_topic.keys())
     return render_template('topic_list.html', CTName=CTName, userID=userID, topics=topics, json_keys=json_keys, json_topic=json_topic)
 
+
+
+
 @app.route("/<userID>/<CTName>/", strict_slashes=False)
 @app.route("/<userID>/<CTName>/<path:topic>/json")
 def dbDisplayJson(userID, CTName, topic):
@@ -202,7 +206,8 @@ def dbDisplayJson(userID, CTName, topic):
     s_data = col.find_one({"topic": topic})
     dict_keys = json.loads(s_data['message'])
     keys = list(dict_keys.keys())
-    return render_template('database_display_json.html', CTName=CTName, topic=topic, keys=keys, table_data=table_data)
+    pub_count = dbData.count()
+    return render_template('database_display_json.html', CTName=CTName, topic=topic, keys=keys, table_data=table_data, pub_count=pub_count)
 
 
 @app.route("/<userID>/<CTName>/", strict_slashes=False)
@@ -211,7 +216,8 @@ def dbDisplayString(userID, CTName, topics):
     msgDB = msgClient[userID]
     col = msgDB[CTName]
     dbData = col.find({"topic": topics})
-    return render_template('database_display.html', CTName=CTName, topic=topics, dbData=dbData)
+    pub_count = dbData.count()
+    return render_template('database_display.html', CTName=CTName, topic=topics, dbData=dbData, pub_count=pub_count)
 
 
 
@@ -237,6 +243,30 @@ def viewAC():
         tmp['email'] = account["email"]
         allAccount.append(tmp)
     return render_template("view_user.html", allAccount=allAccount)
+
+
+def get_publish_count(userID):
+    monitorDB = monitorClient[userID]
+    cols = monitorDB.list_collection_names()
+    total_pubs = 0
+    for col in cols:
+        tmp_col = monitorDB[col]
+        total_pubs = total_pubs + tmp_col.count()
+    return total_pubs
+
+@app.route("/admin/monitor")
+@login_required(must=[be_admin])
+def viewAC_info():
+    default_list = ['admin', 'config', 'local']
+    monitorDB_list = monitorClient.list_database_names()
+    user_list = list(set(monitorDB_list) - set(default_list))
+    user_total = 0
+    for user in user_list:
+        user_total = user_total + get_publish_count(user)
+    import datetime
+    e = datetime.datetime.now()
+    date_msg =  str(e.year) + "년 " + str(e.month) + "월 " + str(e.day) +"일 기준"
+    return render_template("monitor.html", user_total=user_total, date_msg=date_msg)
 
 app.add_url_rule("/protected", view_func=ProtectedView.as_view("protected"))
 
