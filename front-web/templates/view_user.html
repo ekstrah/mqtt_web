@@ -12,7 +12,7 @@
     <tbody>
         {% for account in allAccount %}
         <tr>
-            <th scope="row">{{account['uesrName']}}</th>
+            <th scope="row"><a href="{{url_for('viewACProfile', userName=account['userName'])}}">{{account['userName']}}</a></th>
             <th scope="row">{{account['email']}}</th>
         </tr>
         {% endfor %}

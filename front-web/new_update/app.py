@@ -128,10 +128,6 @@ def be_admin(user):
     if data['isAdmin'] != 1:
         return "User does not have admin role"
 
-
-
-
-
 @app.route("/<userID>/<CTName>", strict_slashes=False)
 def topicDisplay(userID, CTName):
     msgDB = msgClient[userID]
@@ -184,10 +180,31 @@ def dbDisplay(userID, CTName, topic, jsonType=None):
             table_data.append(json.loads(data['message']))
         return render_template('topic_view.html', CTName = CTName, userID=userID, topic=topic, dbData=dbData, isJson=isJson, table_data=table_data, jsonType="yes")
 
-        
 
+@app.route("/admin/verifyAC")
+@login_required(must=[be_admin])
+def complex_view():
+    username = get_username()
+    data = userCollection.find({"isVerified": 0})
+    unVerifiedAccount = []
+    for account in data:
+        unVerifiedAccount.append(account["userName"])
+    return render_template("user_verify.html",unVerifiedAccount=unVerifiedAccount)
+
+@app.route("/admin/viewAC")
+@login_required(must=[be_admin])
+def viewAC():
+    data = userCollection.find()
+    allAccount = []
+    for account in data:
+        print(account)
+        tmp = {}
+        tmp['userName'] = account["userName"]
+        tmp['email'] = account["email"]
+        allAccount.append(tmp)
+    return render_template("view_user.html", allAccount=allAccount)
 
 app.add_url_rule("/protected", view_func=ProtectedView.as_view("protected"))
 
 if __name__ == '__main__':
-	app.run(debug=True)
+    app.run(debug=True, port=8080)

@@ -27,6 +27,9 @@ def on_message(client, userdata, msg):
     data = {'log': "just customize the log", 'time-stamp': str(datetime.now())}
     col.insert_one(data)
 
+    msg_col = msgDB[CTName]
+    msgdata = {'topic': str(msg.topic), 'message': str(msg.payload.decode('utf-8')), 'time-stamp': str(datetime.now())}
+    msg_col.insert_one(msgdata)
 
 parser = argparse.ArgumentParser(description='MQTT Subscriber API that handles mongodb and mqtt-sub')
 group1 = parser.add_argument_group("Handling Topic Words")
@@ -51,7 +54,8 @@ CTName = args.ctname
 
 client = pymongo.MongoClient("mongodb://172.17.0.1:27019/")
 mqttDB = client[USER_NAME]
-
+msgclient = pymongo.MongoClient("mongodb://172.17.0.1:27018/")
+msgDB = msgclient[USER_NAME]
 
 #Start MQTT Subscribe API
 client = mqtt.Client()

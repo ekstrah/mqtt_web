@@ -236,13 +236,20 @@ def complex_view():
 def viewAC():
     data = userCollection.find()
     allAccount = []
-    print(data[0])
     for account in data:
+        print(account)
         tmp = {}
-        tmp['uesrName'] = account["userName"]
+        tmp['userName'] = account["userName"]
         tmp['email'] = account["email"]
         allAccount.append(tmp)
     return render_template("view_user.html", allAccount=allAccount)
+
+@app.route("/admin/viewAC/<userName>")
+@login_required(must=[be_admin])
+def viewACProfile(userName):
+    pub_count = get_publish_count(userName)
+    print(pub_count)
+    return render_template("view_user_profile.html", pub_count=pub_count)
 
 
 def get_publish_count(userID):

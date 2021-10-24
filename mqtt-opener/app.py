@@ -938,7 +938,7 @@ def monitor_mqtt_broker(userID, CTName, port):
         mqttuser = container_query['container_cred_user']
         mqttpwd = container_query['container_cred_pwd']
         arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + "#" + " --ctname " + CTName + " --cred " + str(CTCreds) + " --mqttU " + mqttuser + " --mqttP " + mqttpwd
-    ctn = client.containers.run("ekstrah/monitor-api:0.1", arg_cmd,  detach=True, auto_remove=True)
+    ctn = client.containers.run("ekstrah/monitor-api:0.2", arg_cmd,  detach=True, auto_remove=True)
     return ctn
 
 def database_controller_monitor_update(resp_data, userID, ctn_name):
@@ -1055,6 +1055,7 @@ def hello_world():
 def create_dev_new_container():
     if request.method == 'POST':
         data = request.get_json()
+        print("hello world")
         if data['userID'] is None:
             return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
         if data['CTName'] != "None":
