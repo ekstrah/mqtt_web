@@ -128,6 +128,7 @@ def be_admin(user):
     if data['isAdmin'] != 1:
         return "User does not have admin role"
 
+
 @app.route("/<userID>/<CTName>", strict_slashes=False)
 def topicDisplay(userID, CTName):
     msgDB = msgClient[userID]
@@ -142,43 +143,37 @@ def topicDisplay(userID, CTName):
         except json.decoder.JSONDecodeError:
             json_topic[topic]= 0
     json_keys = list(json_topic.keys())
-    print(CTName, userID, topics, json_keys, json_topic)
-    return render_template("mqtt_broker.html", CTName=CTName, userID=userID, topics=topics, json_keys=json_keys, json_topic=json_topic)
-
-
+    return render_template("container.html", CTName=CTName, userID=userID, topics=topics, json_keys=json_keys, json_topic=json_topic)
 
 # Fix the Json view and String view of the database
-@app.route("/<userID>/<CTName>/", strict_slashes=False)
-@app.route("/<userID>/<CTName>/<path:topic>")
-def dbDisplay(userID, CTName, topic, jsonType=None):
-    if jsonType == None:
-        jsonType = 0
-    else:
-        jsonType = 1
+@app.route("/<userID>/<CTName>", strict_slashes=False)
+@app.route("/<userID>/<CTName>/<path:topic>/string", strict_slashes=False)
+def dbDisplay(userID, CTName, topic):
+    if topic == None:
+        topicDisplay(userID, CTName)
     msgDB = msgClient[userID]
     col = msgDB[CTName]
-    doc = col.find_one({'topic': topic})
-    isJson = 0
-    print(jsonType)
-    try:
-        tmp = json.loads(doc['message'])
-        isJson = 1
-    except json.decoder.JSONDecodeError:
-        pass
-    if jsonType == 0:
-        #PRovide String Only
-        dbData = col.find({"topic": topic})
-        print(jsonType)
-        return render_template('topic_view.html', CTName = CTName, userID=userID, topic=topic, dbData=dbData, isJson=isJson, jsonType=jsonType)
-        
-    else:
-        #Provide JsonView
-        table_data = []
-        dbData = col.find({"topic": topic})
-        table_data = []
-        for data in dbData:
-            table_data.append(json.loads(data['message']))
-        return render_template('topic_view.html', CTName = CTName, userID=userID, topic=topic, dbData=dbData, isJson=isJson, table_data=table_data, jsonType="yes")
+    dbData = col.find({"topic": topic})
+    pub_count = dbData.count()
+    table_data = []
+    return render_template("string_view_topic.html", userID=userID, CTName=CTName, topic=topic, dbData=dbData, pub_count=pub_count )
+
+
+
+@app.route("/<userID>/<CTName>/", strict_slashes=False)
+@app.route("/<userID>/<CTName>/<path:topic>/json")
+def dbDisplayJson(userID, CTName, topic):
+    msgDB = msgClient[userID]
+    col = msgDB[CTName]
+    dbData = col.find({"topic": topic})
+    table_data = []
+    for data in dbData:
+        table_data.append(json.loads(data['message']))
+    s_data = col.find_one({"topic": topic})
+    dict_keys = json.loads(s_data['message'])
+    keys = list(dict_keys.keys())
+    pub_count = dbData.count()
+    return render_template('json_view_topic.html', userID=userID, CTName=CTName, topic=topic, keys=keys, table_data=table_data, pub_count=pub_count)
 
 
 @app.route("/admin/verifyAC")
@@ -205,6 +200,36 @@ def viewAC():
     return render_template("view_user.html", allAccount=allAccount)
 
 app.add_url_rule("/protected", view_func=ProtectedView.as_view("protected"))
+
+
+@app.route("/createC/")
+@login_required()
+def create_container():
+    username = get_username()
+    print(username)
+    return render_template("create_mqtt.html", userID=username)
+
+
+@app.route("/hello/world")
+def login_test_view():
+    return render_template("register2.html")
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm(request.form)
+    if request.method == 'POST' and form.validate():
+        userInit = {"userName": form.username.data, "password": form.password.data, "isAdmin": 0, "csrf_token": "None", "isVerified": 0, "email": form.email.data}
+        vl =userCollection.count_documents(userInit)
+        if vl > 0:
+            flash("Either user exist or username is already taken")
+            return redirect(url_for('register'))
+        else:
+            userCollection.insert_one(userInit)
+        flash('Thanks for registering')
+        return redirect(url_for('simplelogin.login'))
+    return render_template('registration.html', form=form)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080)

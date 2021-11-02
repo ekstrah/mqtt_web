@@ -7,6 +7,19 @@ from flask_cors import CORS
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
 import json
 
+
+"""
+isAdmin - 
+            : 1 Being Admin
+            : 0 Being None Admin
+
+isVerified - 
+            : 0 Require Admin Verification
+            : 1 Free Tier User
+            : 2 Pro Tier User
+            : 3 Admin Tier User
+"""
+
 init_account = {"userName": "ekstrah", "password": "ulsan2015", "isAdmin": 1, "csrf_token": "None", "isVerified": 3, "email": "dongho@ekstrah.com"}
 dummy_account = {"userName": "test", "password": "test", "isAdmin": 0, "csrf_token": "None", "isVerified": 0, "email": "test@test.com"}
 client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
@@ -147,7 +160,7 @@ def devel():
         passWord = form.password.data
         username = get_username()
         dataToSend = {"type" : 1, "userID": username, "CTName": "None", "mqtt_user": userName, "mqtt_pwd": passWord}
-        res  = requests.post('http://localhost:5000/dev/create', json=dataToSend)
+        res  = requests.post('http://localhost:5005/dev/create', json=dataToSend)
         return render_template('view_containers.html', ct_body=resp_body, userID=username, form=form)
     return render_template('view_containers.html', ct_body=resp_body, userID=username)
 
@@ -173,6 +186,7 @@ def register():
         flash('Thanks for registering')
         return redirect(url_for('simplelogin.login'))
     return render_template('registration.html', form=form)
+
 
 
 @app.route("/<userID>/<CTName>")

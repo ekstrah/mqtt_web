@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mt-10 ml-28 mr-5">
+    <div class="w-full md:w-3/5 mx-auto p-8">
+        <p>Assemble <strong>MQTT Server</strong></p>
+        <div class="shadow-md">
+           <div class="tab w-full overflow-hidden border-t">
+              <input class="absolute opacity-0" id="tab-single-one" type="radio" name="tabs2">
+              <label class="block p-5 leading-normal cursor-pointer" for="tab-single-one">Simple Broker</label>
+              <div class="tab-content overflow-hidden border-l-2 bg-gray-100 border-indigo-500 leading-normal">
+                 <div><p class="p-5">Assemble Simple MQTT Server. It doesn't have any quthentication which means you should not share link or port number to anyone.</p></div>
+                 <div class="bottom-0 right-0"><button class="p-2 pl-5 pr-5 bg-blue-500 text-gray-100 text-lg rounded-lg focus:border-4 border-blue-300"  type="button" onclick="create_container_simple('{{userID}}')">Assemble</button></div>
+              </div>
+           </div>
+           <div class="tab w-full overflow-hidden border-t">
+              <input class="absolute opacity-0" id="tab-single-two" type="radio" name="tabs2">
+              <label class="block p-5 leading-normal cursor-pointer" for="tab-single-two">User Authentication Broker</label>
+              <div class="tab-content overflow-hidden border-l-2 bg-gray-100 border-indigo-500 leading-normal">
+                 <p class="p-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tenetur, architecto, explicabo perferendis nostrum, maxime impedit atque odit sunt pariatur illo obcaecati soluta molestias iure facere dolorum adipisci eum? Saepe, itaque.</p>
+              </div>
+           </div>
+           <div class="tab w-full overflow-hidden border-t">
+              <input class="absolute opacity-0" id="tab-single-three" type="radio" name="tabs2">
+              <label class="block p-5 leading-normal cursor-pointer" for="tab-single-three">Advanced Config Broker</label>
+              <div class="tab-content overflow-hidden border-l-2 bg-gray-100 border-indigo-500 leading-normal">
+                 <p class="p-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tenetur, architecto, explicabo perferendis nostrum, maxime impedit atque odit sunt pariatur illo obcaecati soluta molestias iure facere dolorum adipisci eum? Saepe, itaque.</p>
+              </div>
+           </div>
+        </div>
+     </div>
+</div>
+<script>
+
+function dbController(option, CTName, userID) {
+  if (option == 1) {
+      var xhr = new XMLHttpRequest();
+      var url = "http://localhost:5555/dev/create";
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var json = JSON.parse(xhr.responseText);
+          console.log(json)
+         }
+      };
+    const parse_data = {
+      "userID": userID,
+      "CTName" : CTName,
+      "topic" : "#"
+    };
+    var data = JSON.stringify(parse_data);
+    xhr.send(data);
+    location.reload();
+  }
+  else {
+    var xhr = new XMLHttpRequest();
+      var url = "http://localhost:5555/dev/delete";
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var json = JSON.parse(xhr.responseText);
+          console.log(json)
+         }
+      };
+    const parse_data = {
+      "userID": userID,
+      "CTName" : CTName
+    };
+    var data = JSON.stringify(parse_data);
+    xhr.send(data);
+    location.reload();
+  }
+}
+function delete_container(userID, CTName, port) {
+  port = parseInt(port);
+  var xhr = new XMLHttpRequest();
+  var url = "http://localhost:5005/dev/delete";
+  xhr.open("POST", url, true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      var json = JSON.parse(xhr.responseText);
+      console.log(json)
+    }
+  };
+  const parse_data = {
+    "userID": userID,
+    "CTName" : CTName,
+    "port" : port
+  };
+  var data = JSON.stringify(parse_data);
+  xhr.send(data);
+  location.reload();
+}
+
+function create_container_simple(userID) {
+  var xhr = new XMLHttpRequest(); 
+  var url = "http://localhost:5005/dev/create";
+  xhr.open("POST", url, true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      var json = JSON.parse(xhr.responseText);
+      console.log(json)
+    }
+  };
+  const parse_data = {
+    "type": 0,
+    "userID": userID,
+    "CTName" : "None"
+  };
+  var data = JSON.stringify(parse_data);
+  xhr.send(data);
+}
+</script>
+
+{% endblock %}
