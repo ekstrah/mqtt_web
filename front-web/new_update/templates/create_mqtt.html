@@ -16,62 +16,27 @@
               <input class="absolute opacity-0" id="tab-single-two" type="radio" name="tabs2">
               <label class="block p-5 leading-normal cursor-pointer" for="tab-single-two">User Authentication Broker</label>
               <div class="tab-content overflow-hidden border-l-2 bg-gray-100 border-indigo-500 leading-normal">
-                 <p class="p-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tenetur, architecto, explicabo perferendis nostrum, maxime impedit atque odit sunt pariatur illo obcaecati soluta molestias iure facere dolorum adipisci eum? Saepe, itaque.</p>
-              </div>
+                 <!-- <p class="p-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tenetur, architecto, explicabo perferendis nostrum, maxime impedit atque odit sunt pariatur illo obcaecati soluta molestias iure facere dolorum adipisci eum? Saepe, itaque.</p> -->
+                 <form class="flex flex-col bg-white rounded shadow-lg p-12 mt-12" action="">
+                  <label class="font-semibold text-xs" for="usernameField">Username for MQTT</label>
+                  <input class="flex items-center h-12 px-4 w-64 bg-gray-200 mt-2 rounded focus:outline-none focus:ring-2" type="text">
+                  <label class="font-semibold text-xs mt-3" for="passwordField">Password for MQTT</label>
+                  <input class="flex items-center h-12 px-4 w-64 bg-gray-200 mt-2 rounded focus:outline-none focus:ring-2"type="password">
+                  <button class="flex items-center justify-center h-12 px-6 w-64 bg-blue-600 mt-8 rounded font-semibold text-sm text-blue-100 hover:bg-blue-700">Assemble</button>
+                </form>
+                </div>
            </div>
            <div class="tab w-full overflow-hidden border-t">
               <input class="absolute opacity-0" id="tab-single-three" type="radio" name="tabs2">
               <label class="block p-5 leading-normal cursor-pointer" for="tab-single-three">Advanced Config Broker</label>
               <div class="tab-content overflow-hidden border-l-2 bg-gray-100 border-indigo-500 leading-normal">
-                 <p class="p-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tenetur, architecto, explicabo perferendis nostrum, maxime impedit atque odit sunt pariatur illo obcaecati soluta molestias iure facere dolorum adipisci eum? Saepe, itaque.</p>
+                 <p class="p-5">This Functionality is not implemented yet, but it will be available soon. This functionality allows users to have full configuration of MQTT</p>
               </div>
            </div>
         </div>
      </div>
 </div>
 <script>
-
-function dbController(option, CTName, userID) {
-  if (option == 1) {
-      var xhr = new XMLHttpRequest();
-      var url = "http://localhost:5555/dev/create";
-      xhr.open("POST", url, true);
-      xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          var json = JSON.parse(xhr.responseText);
-          console.log(json)
-         }
-      };
-    const parse_data = {
-      "userID": userID,
-      "CTName" : CTName,
-      "topic" : "#"
-    };
-    var data = JSON.stringify(parse_data);
-    xhr.send(data);
-    location.reload();
-  }
-  else {
-    var xhr = new XMLHttpRequest();
-      var url = "http://localhost:5555/dev/delete";
-      xhr.open("POST", url, true);
-      xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          var json = JSON.parse(xhr.responseText);
-          console.log(json)
-         }
-      };
-    const parse_data = {
-      "userID": userID,
-      "CTName" : CTName
-    };
-    var data = JSON.stringify(parse_data);
-    xhr.send(data);
-    location.reload();
-  }
-}
 function delete_container(userID, CTName, port) {
   port = parseInt(port);
   var xhr = new XMLHttpRequest();

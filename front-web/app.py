@@ -152,7 +152,6 @@ def devel():
         dbController = container['dbController']
         t_dict = {'userID': username, 'port': port, 'CTName': CTName, 'Status': 'Active', "button_tag": [username, CTName, str(port)], "dbController": dbController}
         resp_body.append(t_dict)
-        button_tag = [username, CTName, str(port)]
     if request.method == 'GET':
         return render_template('view_containers.html', ct_body=resp_body, userID=username, form=form)
     elif request.method == 'POST' and form.validate():

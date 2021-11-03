@@ -1,3 +1,4 @@
+from requests import get as get_ip
 import requests
 from flask import Flask, jsonify, render_template, request, redirect, flash, url_for
 from flask.views import MethodView
@@ -6,17 +7,55 @@ import pymongo
 from flask_cors import CORS
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
 import json
+from datetime import datetime
 
 
-init_account = {"userName": "ekstrah", "password": "ulsan2015", "isAdmin": 1, "csrf_token": "None", "isVerified": 3, "email": "dongho@ekstrah.com"}
-dummy_account = {"userName": "test", "password": "test", "isAdmin": 0, "csrf_token": "None", "isVerified": 0, "email": "test@test.com"}
+new_init_account = {
+  'userName': "ekstrah",
+  'password': "ulsan2015",
+  'role': 5,
+  'allowd_container': -1,
+  "csrf_token": "None",
+  "email": "dongho@ekstrah.com",
+}
+
+free_init_account = {
+  'userName': "free",
+  'password': "ulsan2015",
+  'role': 1,
+  'allowd_container': -1,
+  "csrf_token": "None",
+  "email": "free@ekstrah.com",
+}
+
+premium_init_account = {
+
+  'userName': "premium",
+  'password': "ulsan2015",
+  'role': 3,
+  'allowd_container': -1,
+  "csrf_token": "None",
+  "email": "premium@ekstrah.com",
+}
+
+test_init_account = {
+  'userName': "test",
+  'password': "ulsan2015",
+  'role': 0,
+  'allowd_container': -1,
+  "csrf_token": "None",
+  "email": "test@ekstrah.com",
+}
+
 client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 msgClient = pymongo.MongoClient("mongodb://127.0.0.1:27018/")
+logClient = pymongo.MongoClient("mongodb://127.0.0.1:27019/")
 dbUserID = client['userID']
 app = Flask(__name__)
 CORS(app)
 db = client['web']
 userCollection = db['userAccount']
+pub_ip = get_ip('https://api.ipify.org').text
 
 class RegistrationForm(Form):
     username = StringField('Username', [validators.Length(min=4, max=25)])
@@ -43,18 +82,23 @@ class ProtectedView(MethodView):
 
 
 def inititialize_start_account():
-    vl = userCollection.count_documents(init_account)
-    if vl < 1:
-        userCollection.insert_one(init_account)
-        userCollection.insert_one(dummy_account)
+    new_init_account['time-created'] = str(datetime.now())
+    premium_init_account['time-created'] = str(datetime.now())
+    test_init_account['time-created'] = str(datetime.now())
+    free_init_account['time-created'] = str(datetime.now())
+    vl = userCollection.count_documents({'userName': "ekstrah"})
+    if vl == 0:
+        userCollection.insert_one(new_init_account)
+        userCollection.insert_one(premium_init_account)
+        userCollection.insert_one(test_init_account)
+        userCollection.insert_one(free_init_account)
     else:
         print("admin account already exist")
 
 
 def check_user_account(user):
     data = userCollection.find_one({"userName": user['username'], "password": user['password']})
-    print(data)
-    if not data or data['isVerified'] == 0:
+    if not data or data['role'] == 0:
         return False
     elif data['password'] == user['password'] and data:
         userCollection.update_one({"userName": user["username"], "password": user["password"]}, {"$set": {"csrf_token": user['csrf_token']}})
@@ -82,6 +126,7 @@ def home():
 @app.route("/profile/")
 @login_required()
 def profile_view():
+
     return render_template("profile.html")
 
 @app.route("/test")
@@ -117,7 +162,7 @@ def is_admin():
         t_dict = {'userID': user, 'port': port, 'CTName': CTName, 'Status': 'Active', "button_tag": [user, CTName, str(port)], "dbController": dbController}
         resp_body.append(t_dict)
         count = count + 1
-    if data['isAdmin'] == 1:
+    if data['role'] == 5:
         return dict(is_admin= 1, counter=count, ct_body=resp_body)
     return dict(is_admin = 0,counter=count,  ct_body=resp_body)
 
@@ -125,9 +170,43 @@ def is_admin():
 def be_admin(user):
     """Validator to check if user has admin role"""
     data = userCollection.find_one({"userName": user})
-    if data['isAdmin'] != 1:
+    if data['role'] != 5:
         return "User does not have admin role"
 
+def be_non_free(user):
+    data = userCollection.find_one({"userName": user})
+    if data['role'] < 2:
+        return -10
+    return 10
+
+
+
+def get_role(user):
+    data = userCollection.find_one({"userName": user})
+    if data['role'] == 1:
+        return "Free"
+    if data['role'] == 3:
+        return "Premium"
+    return "Admin"
+
+
+def get_24h(userID, CTName):
+    from datetime import datetime
+    now = datetime.now()
+    logDB = logClient[userID]
+    logCol = logDB[CTName]
+    logs = logCol.find()
+    total_24 = 0
+    bef_24 = 0
+    for log in logs:
+        t_dt_object = datetime.strptime(log['time-stamp'], '%Y-%m-%d %H:%M:%S.%f')
+        t_time = now - t_dt_object
+        msg_time = int(t_time.total_seconds())
+        if msg_time < 86400:
+            total_24 += 1
+        if msg_time > 86400 and msg_time < 172800:
+            bef_24 += 1
+    return total_24, bef_24
 
 @app.route("/<userID>/<CTName>", strict_slashes=False)
 def topicDisplay(userID, CTName):
@@ -143,7 +222,25 @@ def topicDisplay(userID, CTName):
         except json.decoder.JSONDecodeError:
             json_topic[topic]= 0
     json_keys = list(json_topic.keys())
-    return render_template("container.html", CTName=CTName, userID=userID, topics=topics, json_keys=json_keys, json_topic=json_topic)
+
+    # Getting Tier
+    tier = get_role(userID)
+    ct_DB = dbUserID[userID]
+    CT_object = ct_DB.find_one({"CTName": CTName})
+    ct_port = CT_object['port']
+    total_24, bef_24 = get_24h(userID, CTName)
+    if bef_24 == 0:
+        change_24 = (total_24/1)*100
+    else:
+        change_24 = (total_24/bef_24)*100
+    num_topics = len(topics)
+    """
+        - We need to get the port number somehow
+        - Get Tier
+    """
+    button_tag=[userID,CTName, str(ct_port)]
+    print(button_tag)
+    return render_template("container.html", CTName=CTName, userID=userID, topics=topics, json_topic=json_topic, tier=tier, pub_ip=pub_ip, ct_port=ct_port, total_24=total_24, num_topics=num_topics, change_24=change_24, bef_24=int(total_24-bef_24),button_tag=button_tag)
 
 # Fix the Json view and String view of the database
 @app.route("/<userID>/<CTName>", strict_slashes=False)
@@ -176,28 +273,35 @@ def dbDisplayJson(userID, CTName, topic):
     return render_template('json_view_topic.html', userID=userID, CTName=CTName, topic=topic, keys=keys, table_data=table_data, pub_count=pub_count)
 
 
-@app.route("/admin/verifyAC")
+@app.route("/verifyAC/")
 @login_required(must=[be_admin])
 def complex_view():
-    username = get_username()
-    data = userCollection.find({"isVerified": 0})
-    unVerifiedAccount = []
-    for account in data:
-        unVerifiedAccount.append(account["userName"])
-    return render_template("user_verify.html",unVerifiedAccount=unVerifiedAccount)
+    # username = get_username()
+    # data = userCollection.find({"role": 0})
+    # unVerifiedAccount = []
+    # for account in data:
+    #     unVerifiedAccount.append(account["userName"])
+    return render_template("edit_user.html")
 
-@app.route("/admin/viewAC")
+@app.route("/viewAC/")
 @login_required(must=[be_admin])
 def viewAC():
     data = userCollection.find()
     allAccount = []
     for account in data:
-        print(account)
         tmp = {}
         tmp['userName'] = account["userName"]
         tmp['email'] = account["email"]
+        tmp['role'] = account['role']
+        tmp['num_cont'] = account['allowd_container']
+        tmp['time-created'] = account['time-created']
         allAccount.append(tmp)
-    return render_template("view_user.html", allAccount=allAccount)
+    data = userCollection.find({"isVerified": 0})
+    unVerifiedAccount = []
+    for account in data:
+        unVerifiedAccount.append(account["userName"])
+    return render_template("edit_user.html", allAccount=allAccount, unVerifiedAccount=unVerifiedAccount)
+
 
 app.add_url_rule("/protected", view_func=ProtectedView.as_view("protected"))
 
@@ -206,11 +310,12 @@ app.add_url_rule("/protected", view_func=ProtectedView.as_view("protected"))
 @login_required()
 def create_container():
     username = get_username()
-    print(username)
+    if be_non_free(username) < 0:
+        return render_template("non_free.html")
     return render_template("create_mqtt.html", userID=username)
 
 
-@app.route("/hello/world")
+@app.route("/edit/<userID>")
 def login_test_view():
     return render_template("register2.html")
 
@@ -219,7 +324,7 @@ def login_test_view():
 def register():
     form = RegistrationForm(request.form)
     if request.method == 'POST' and form.validate():
-        userInit = {"userName": form.username.data, "password": form.password.data, "isAdmin": 0, "csrf_token": "None", "isVerified": 0, "email": form.email.data}
+        userInit = {"userName": form.username.data, "password": form.password.data, "role": 0, "csrf_token": "None", "email": form.email.data}
         vl =userCollection.count_documents(userInit)
         if vl > 0:
             flash("Either user exist or username is already taken")

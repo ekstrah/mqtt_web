@@ -15,15 +15,15 @@
                         <p class="text-xs font-semibold text-gray-400">Container Name</p>
                      </div>
                      <div class="p-4">
-                        <p class="text-xl font-bold">20040</p>
+                        <p class="text-xl font-bold">{{ct_port}}</p>
                         <p class="text-xs font-semibold text-gray-400">Port</p>
                      </div>
                      <div class="p-4">
-                        <p class="text-xl font-bold">127.0.0.1</p>
+                        <p class="text-xl font-bold">{{pub_ip}}</p>
                         <p class="text-xs font-semibold text-gray-400">IP Address</p>
                      </div>
                      <div class=" p-4">
-                        <p class="text-xl font-bold">Pro</p>
+                        <p class="text-xl font-bold">{{tier}}</p>
                         <p class="text-xs font-semibold text-gray-400">Tier</p>
                      </div>
                   </div>
@@ -32,9 +32,13 @@
                     <div class="p-4">
                         <p class="text-sm text-gray-400">Number of Request Left</p>
                         <div class="shadow w-full bg-gray-100 mt-2">
-                            <div class="bg-indigo-600 text-xs leading-none py-1 text-center text-white" style="width: 55%"></div>
+                            <div class="bg-indigo-600 text-xs leading-none py-1 text-center text-white" style="width: 0%"></div>
                          </div>
-                          <p class="text-xs font-semibold text-gray-400 mt-2">10</p>
+                         {% if tier == "Free" %}
+                          <p class="text-xs font-semibold text-gray-400 mt-2">50</p>
+                        {% else %}
+                          <p class="text-xs font-semibold text-gray-400 mt-2">∞</p>
+                        {% endif %}
                      </div>
                 </div>
               </div>
@@ -48,7 +52,7 @@
                              # Requests
                         </h3>
                         <h3 class="text-center text-white text-3xl mt-2 font-bold">
-                             10204 / 24h
+                             {{total_24}} / 24h
                         </h3>
                         <!-- <div class="flex space-x-4 mt-4">
                            <button class="block uppercase mx-auto shadow bg-white text-indigo-600 focus:shadow-outline 
@@ -75,10 +79,10 @@
                           <p># Topics</p>
                         </div>
                         <h3 class="text-white text-3xl mt-2 font-bold">
-                            4
+                            {{num_topics}}
                         </h3>
                          <h3 class="text-white text-lg mt-2 text-yellow-100 ">
-                            2 not active for 24h
+                            0 not active for 24h
                         </h3>
                       </div>
                     </div>
@@ -95,11 +99,24 @@
                           <p>Statistics</p>
                         </div>
                         <h3 class="text-white text-3xl mt-2 font-bold">
-                            102
+                            {{bef_24}}
                         </h3>
+                        {% if change_24 > 0 %}
                          <h3 class="text-white text-lg mt-2 ">
-                           3.4% <span class='font-semibold text-blue-200'>more than yesterday</span>
+                           {{change_24}}%
+                           <span class='font-semibold text-blue-200'>more than yesterday</span>
                         </h3>
+                        {% elif change_24 == 0 %}
+                        <h3 class="text-white text-lg mt-2 ">
+                          {{change_24}}%
+                          <span class='font-semibold text-gray-200'>same as yesterday</span>
+                       </h3>
+                       {% else %}
+                       <h3 class="text-white text-lg mt-2 ">
+                        {{change_24}}%
+                        <span class='font-semibold text-red-200'>less than yesterday</span>
+                     </h3>
+                     {% endif %}
                       </div>
                     </div>
                 </div>        
@@ -131,6 +148,30 @@
         <p>No message published to Broker</p>
     </div>
 {% endif %}
+<div class="mt-10 ml-28"><button class="p-2 pl-5 pr-5 bg-red-500 text-gray-100 text-lg rounded-lg focus:border-4 border-red-300" onclick="delete_container('{{userID}}','{{CTName}}','{{ct_port}}')">Destroy</button></div>
 </div>
 
+<script>
+  function delete_container(userID, CTName, port) {
+    port = parseInt(port);
+    var xhr = new XMLHttpRequest();
+    var url = "http://localhost:5005/dev/delete";
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        var json = JSON.parse(xhr.responseText);
+        console.log(json)
+      }
+    };
+    const parse_data = {
+      "userID": userID,
+      "CTName" : CTName,
+      "port" : port
+    };
+    var data = JSON.stringify(parse_data);
+    xhr.send(data);
+    alert("It might take few seconds to take effect");
+  }
+</script>
 {% endblock %}

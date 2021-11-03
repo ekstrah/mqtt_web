@@ -1055,7 +1055,6 @@ def hello_world():
 def create_dev_new_container():
     if request.method == 'POST':
         data = request.get_json()
-        print("hello world")
         if data['userID'] is None:
             return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
         if data['CTName'] != "None":
@@ -1073,6 +1072,7 @@ def create_dev_new_container():
 def delete_old_dev_container():
     if request.method == "POST":
         data = request.get_json()
+        print(data)
         if data['userID'] is None or data['CTName'] is None or data['port'] is None:
             return jsonify({'status': 'error', 'message': 'error in json data'})
         CTName = data['CTName']

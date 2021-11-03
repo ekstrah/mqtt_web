@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mqttify</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
   <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+  <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.js" defer></script>
 </head>
 
 <body>
@@ -18,7 +22,7 @@
         {% endfor %}
         {% endif %}
         {% if is_admin == 1 %}
-        <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 hover:bg-green-600 rounded-lg transition-all duration-300 ease-linear cursor-pointer"><span class="fa fa-users-cog fa-2x"></span></i>
+        <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 hover:bg-green-600 rounded-lg transition-all duration-300 ease-linear cursor-pointer" onclick="window.location.href={{url_for('viewAC')}}"><span class="fa fa-users-cog fa-2x"></span></i>
         {% endif %}
         <i class="relative flex items-center justify-center h-20 w-20 mt-2 mb-2 mx-auto shadow-lg bg-gray-800 hover:bg-green-600 rounded-lg transition-all duration-300 ease-linear cursor-pointer" onclick="window.location.href={{url_for('create_container')}}"><span class="fa fa-plus fa-2x"></span></i>
         {% else %}

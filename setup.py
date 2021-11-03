@@ -16,10 +16,9 @@ def initialie_database():
 
     #Mosquitto Broker for Free Tier
     port_dict = {'1883/tcp' : ('0.0.0.0', 20450)}
-    
+
     ABS_PATH = os.environ['PWD']
     BASIC_MQTT_CONFIG = ABS_PATH + "/config/."
-    print(BASIC_MQTT_CONFIG)
     vol = {BASIC_MQTT_CONFIG: {'bind' : '/mosquitto/config/', 'mode': 'rw'}}
     container = client.containers.run(image='eclipse-mosquitto:latest', detach=True, ports=port_dict, volumes=vol)
 if __name__ == "__main__":
