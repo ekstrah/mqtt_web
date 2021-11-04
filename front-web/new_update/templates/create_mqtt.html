@@ -2,7 +2,7 @@
 {% block content %}
 <div class="mt-10 ml-28 mr-5">
     <div class="w-full md:w-3/5 mx-auto p-8">
-        <p>Assemble <strong>MQTT Server</strong></p>
+        <p>Assemble <strong>MQTT Server</strong></p><p id="userName">{{userID}}</p>
         <div class="shadow-md">
            <div class="tab w-full overflow-hidden border-t">
               <input class="absolute opacity-0" id="tab-single-one" type="radio" name="tabs2">
@@ -17,12 +17,12 @@
               <label class="block p-5 leading-normal cursor-pointer" for="tab-single-two">User Authentication Broker</label>
               <div class="tab-content overflow-hidden border-l-2 bg-gray-100 border-indigo-500 leading-normal">
                  <!-- <p class="p-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tenetur, architecto, explicabo perferendis nostrum, maxime impedit atque odit sunt pariatur illo obcaecati soluta molestias iure facere dolorum adipisci eum? Saepe, itaque.</p> -->
-                 <form class="flex flex-col bg-white rounded shadow-lg p-12 mt-12" action="">
+                 <form class="flex flex-col bg-white rounded shadow-lg p-12 mt-12" action="" id="userForm">
                   <label class="font-semibold text-xs" for="usernameField">Username for MQTT</label>
-                  <input class="flex items-center h-12 px-4 w-64 bg-gray-200 mt-2 rounded focus:outline-none focus:ring-2" type="text">
+                  <input class="flex items-center h-12 px-4 w-64 bg-gray-200 mt-2 rounded focus:outline-none focus:ring-2" type="text" id="mqttUser">
                   <label class="font-semibold text-xs mt-3" for="passwordField">Password for MQTT</label>
-                  <input class="flex items-center h-12 px-4 w-64 bg-gray-200 mt-2 rounded focus:outline-none focus:ring-2"type="password">
-                  <button class="flex items-center justify-center h-12 px-6 w-64 bg-blue-600 mt-8 rounded font-semibold text-sm text-blue-100 hover:bg-blue-700">Assemble</button>
+                  <input class="flex items-center h-12 px-4 w-64 bg-gray-200 mt-2 rounded focus:outline-none focus:ring-2"type="password" id="mqttPass">
+                  <button class="flex items-center justify-center h-12 px-6 w-64 bg-blue-600 mt-8 rounded font-semibold text-sm text-blue-100 hover:bg-blue-700" type="submit" id="btnSubmit">Assemble</button>
                 </form>
                 </div>
            </div>
@@ -37,6 +37,38 @@
      </div>
 </div>
 <script>
+const userForm = document.querySelector("#userForm");
+const user = '{{userID}}';
+if (userForm) {
+  userForm.addEventListener("submit", function(e) {
+    var userName = document.getElementById("mqttUser").value
+    var userPass = document.getElementById("mqttPass").value
+    create_container_user(user, userName, userPass);
+  });
+}
+
+
+function create_container_user(userID, userName, userPass) {
+  alert("UserID " + userID + " UserName " + userName + " UserPass " + userPass);
+  var xhr = new XMLHttpRequest(); 
+  var url = "http://localhost:5005/dev/create";
+  xhr.open("POST", url, true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4 && xhr.status === 200) {
+      var json = JSON.parse(xhr.responseText);
+    }
+  };
+  const parse_data = {
+    "type": 1,
+    "userID": userID,
+    "CTName" : "None",
+    "mqtt_user": userName,
+    "mqtt_pwd": userPass
+  };
+  var data = JSON.stringify(parse_data);
+  xhr.send(data);
+}
 function delete_container(userID, CTName, port) {
   port = parseInt(port);
   var xhr = new XMLHttpRequest();

@@ -1055,18 +1055,20 @@ def hello_world():
 def create_dev_new_container():
     if request.method == 'POST':
         data = request.get_json()
-        if data['userID'] is None:
-            return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
-        if data['CTName'] != "None":
-            resp_data = create_container(data, CTName=data['CTName'])
-        else:
-            resp_data, userID, CTName, rand_port = create_container(data)
-        database_controller_ad(resp_data, data['userID'])
-        ctn = monitor_mqtt_broker(userID, CTName, rand_port)
-        database_controller_monitor_update(resp_data, data['userID'], ctn.name)
-        return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'Successfully Added', 'statusCode' : 1})
-    if request.method == 'GET':
-        return jsonify({'action': 'create_mqtt', 'status': 'failed', 'message': 'Unrelevant Request', 'statusCode' : -1})
+        print(data)
+    return jsonify({'action': 'hello'})
+    #     if data['userID'] is None:
+    #         return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
+    #     if data['CTName'] != "None":
+    #         resp_data = create_container(data, CTName=data['CTName'])
+    #     else:
+    #         resp_data, userID, CTName, rand_port = create_container(data)
+    #     database_controller_ad(resp_data, data['userID'])
+    #     ctn = monitor_mqtt_broker(userID, CTName, rand_port)
+    #     database_controller_monitor_update(resp_data, data['userID'], ctn.name)
+    #     return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'Successfully Added', 'statusCode' : 1})
+    # if request.method == 'GET':
+    #     return jsonify({'action': 'create_mqtt', 'status': 'failed', 'message': 'Unrelevant Request', 'statusCode' : -1})
 
 @app.route('/dev/delete', methods=['POST', 'GET'])
 def delete_old_dev_container():
