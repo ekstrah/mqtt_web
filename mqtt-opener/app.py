@@ -921,6 +921,7 @@ password_file /mosquitto/config/password.txt
 
 
 
+
 def monitor_mqtt_broker(userID, CTName, port):
     CT_port = 1883
     CT_user = userID
@@ -1055,20 +1056,18 @@ def hello_world():
 def create_dev_new_container():
     if request.method == 'POST':
         data = request.get_json()
-        print(data)
-    return jsonify({'action': 'hello'})
-    #     if data['userID'] is None:
-    #         return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
-    #     if data['CTName'] != "None":
-    #         resp_data = create_container(data, CTName=data['CTName'])
-    #     else:
-    #         resp_data, userID, CTName, rand_port = create_container(data)
-    #     database_controller_ad(resp_data, data['userID'])
-    #     ctn = monitor_mqtt_broker(userID, CTName, rand_port)
-    #     database_controller_monitor_update(resp_data, data['userID'], ctn.name)
-    #     return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'Successfully Added', 'statusCode' : 1})
-    # if request.method == 'GET':
-    #     return jsonify({'action': 'create_mqtt', 'status': 'failed', 'message': 'Unrelevant Request', 'statusCode' : -1})
+        if data['userID'] is None:
+            return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
+        if data['CTName'] != "None":
+            resp_data, userID, CTName, rand_port = create_container(data, CTName=data['CTName'])
+        else:
+            resp_data, userID, CTName, rand_port = create_container(data)
+        database_controller_ad(resp_data, data['userID'])
+        ctn = monitor_mqtt_broker(userID, CTName, rand_port)
+        database_controller_monitor_update(resp_data, data['userID'], ctn.name)
+        return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'Successfully Added', 'statusCode' : 1})
+    if request.method == 'GET':
+        return jsonify({'action': 'create_mqtt', 'status': 'failed', 'message': 'Unrelevant Request', 'statusCode' : -1})
 
 @app.route('/dev/delete', methods=['POST', 'GET'])
 def delete_old_dev_container():
@@ -1090,6 +1089,28 @@ def delete_old_dev_container():
     else:
         return jsonify({'action': 'delete', 'status': 'failure', 'message': 'Other request received which is not implemented', 'statusCode': -1})
 
+def initialize_default_public_mqtt_broker():
+    #Mosquitto Broker for Free Tier
+    col = db['public']
+    vl = col.count_documents({'userID': "public"})
+    if vl == 0:
+        data = {}
+        data['type'] = 0
+        data['userID'] = "public"
+        """
+        {
+            "type": 1,
+            "userID": "ekstrah",
+            "CTName": "None",
+            "mqtt_user": "test",
+            "mqtt_pwd": "test123"
+        }
+        """
+        resp_data, userID, CTName, rand_port = create_container(data)
+        database_controller_ad(resp_data, data['userID'])
+        ctn = monitor_mqtt_broker(userID, CTName, rand_port)
+        database_controller_monitor_update(resp_data, data['userID'], ctn.name)
 
+initialize_default_public_mqtt_broker()
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5005)
+    app.run(debug=True, host='0.0.0.0', port=5005)

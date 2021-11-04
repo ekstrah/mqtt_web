@@ -18,6 +18,14 @@ new_init_account = {
   "csrf_token": "None",
   "email": "dongho@ekstrah.com",
 }
+public_init_account = {
+  'userName': "public",
+  'password': "ulsan2015",
+  'role': 5,
+  'allowd_container': 1,
+  "csrf_token": "None",
+  "email": "public@ekstrah.com",
+}
 
 free_init_account = {
   'userName': "free",
@@ -86,12 +94,14 @@ def inititialize_start_account():
     premium_init_account['time-created'] = str(datetime.now())
     test_init_account['time-created'] = str(datetime.now())
     free_init_account['time-created'] = str(datetime.now())
+    public_init_account['time-created'] = str(datetime.now())
     vl = userCollection.count_documents({'userName': "ekstrah"})
     if vl == 0:
         userCollection.insert_one(new_init_account)
         userCollection.insert_one(premium_init_account)
         userCollection.insert_one(test_init_account)
         userCollection.insert_one(free_init_account)
+        userCollection.insert_one(public_init_account)
     else:
         print("admin account already exist")
 

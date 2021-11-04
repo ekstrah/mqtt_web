@@ -5,7 +5,7 @@ def on_connect(client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.subscribe("#")
+    client.subscribe("ulsan/ie")
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
@@ -14,8 +14,9 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-# client.username_pw_set(username="test", password="test")
-client.connect("127.0.0.1", 25359, 30)
+client.username_pw_set(username="uou", password="password")
+# client.connect("mqtt.eclipseprojects.io", 1883, 60)
+client.connect("203.250.81.142", 1883, 60)
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
