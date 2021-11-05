@@ -14,7 +14,7 @@ new_init_account = {
   'userName': "ekstrah",
   'password': "ulsan2015",
   'role': 5,
-  'allowd_container': -1,
+  'allowed_container': 100,
   "csrf_token": "None",
   "email": "dongho@ekstrah.com",
 }
@@ -22,7 +22,7 @@ public_init_account = {
   'userName': "public",
   'password': "ulsan2015",
   'role': 5,
-  'allowd_container': 1,
+  'allowed_container': 1,
   "csrf_token": "None",
   "email": "public@ekstrah.com",
 }
@@ -31,17 +31,16 @@ free_init_account = {
   'userName': "free",
   'password': "ulsan2015",
   'role': 1,
-  'allowd_container': -1,
+  'allowed_container': -1,
   "csrf_token": "None",
   "email": "free@ekstrah.com",
 }
 
 premium_init_account = {
-
   'userName': "premium",
   'password': "ulsan2015",
   'role': 3,
-  'allowd_container': -1,
+  'allowed_container': 1,
   "csrf_token": "None",
   "email": "premium@ekstrah.com",
 }
@@ -50,7 +49,7 @@ test_init_account = {
   'userName': "test",
   'password': "ulsan2015",
   'role': 0,
-  'allowd_container': -1,
+  'allowed_container': -1,
   "csrf_token": "None",
   "email": "test@ekstrah.com",
 }
@@ -172,6 +171,16 @@ def is_admin():
         t_dict = {'userID': user, 'port': port, 'CTName': CTName, 'Status': 'Active', "button_tag": [user, CTName, str(port)], "dbController": dbController}
         resp_body.append(t_dict)
         count = count + 1
+    #Getting Public MQTT Broker
+    col = dbUserID['public']
+    containers = col.find()
+    for container in containers:
+        port = container['port']
+        CTName = container['CTName']
+        dbController = container['dbController']
+        t_dict = {'userID': user, 'port': port, 'CTName': CTName, 'Status': 'Active', "button_tag": [user, CTName, str(port)], "dbController": dbController}
+        resp_body.append(t_dict)
+        count += 1
     if data['role'] == 5:
         return dict(is_admin= 1, counter=count, ct_body=resp_body)
     return dict(is_admin = 0,counter=count,  ct_body=resp_body)
@@ -218,8 +227,26 @@ def get_24h(userID, CTName):
             bef_24 += 1
     return total_24, bef_24
 
+
+
+def isPublic(CTName):
+    col = dbUserID['public']
+    containers = col.find()
+    for container in containers:
+        if CTName == container['CTName']:
+            return 1
+    return 0
+
 @app.route("/<userID>/<CTName>", strict_slashes=False)
+@login_required()
 def topicDisplay(userID, CTName):
+    b_userID = userID
+    """
+        Check whether the CTName is assigned by public user
+    """
+    if isPublic(CTName):
+        userID = 'public'
+
     msgDB = msgClient[userID]
     col = msgDB[CTName]
     topics = col.distinct('topic')
@@ -234,7 +261,7 @@ def topicDisplay(userID, CTName):
     json_keys = list(json_topic.keys())
 
     # Getting Tier
-    tier = get_role(userID)
+    tier = get_role(b_userID)
     ct_DB = dbUserID[userID]
     CT_object = ct_DB.find_one({"CTName": CTName})
     ct_port = CT_object['port']
@@ -283,15 +310,14 @@ def dbDisplayJson(userID, CTName, topic):
     return render_template('json_view_topic.html', userID=userID, CTName=CTName, topic=topic, keys=keys, table_data=table_data, pub_count=pub_count)
 
 
-@app.route("/verifyAC/")
+@app.route("/viewAC/<userName>")
 @login_required(must=[be_admin])
-def complex_view():
-    # username = get_username()
-    # data = userCollection.find({"role": 0})
-    # unVerifiedAccount = []
-    # for account in data:
-    #     unVerifiedAccount.append(account["userName"])
-    return render_template("edit_user.html")
+def complex_view(userName):
+    data = userCollection.find_one({'userName': userName})
+    email = data['email']
+    allowed_container = data['allowed_container']
+    print(data['allowed_container'])
+    return render_template("edit_indiv_user.html", userName=userName, email=email, allowed_container=allowed_container)
 
 @app.route("/viewAC/")
 @login_required(must=[be_admin])
@@ -303,7 +329,7 @@ def viewAC():
         tmp['userName'] = account["userName"]
         tmp['email'] = account["email"]
         tmp['role'] = account['role']
-        tmp['num_cont'] = account['allowd_container']
+        tmp['num_cont'] = account['allowed_container']
         tmp['time-created'] = account['time-created']
         allAccount.append(tmp)
     data = userCollection.find({"isVerified": 0})
@@ -345,6 +371,14 @@ def register():
         return redirect(url_for('simplelogin.login'))
     return render_template('registration.html', form=form)
 
-
+@app.route('/user/update', methods=['GET', 'POST'])
+@login_required(must=[be_admin])
+def updaet_user_account():
+    if request.method == 'POST':
+        data = request.get_json()
+        print(data['ctn_count'])
+        print(userCollection.update_one({'userName': data['userName']}, {"$set" : {"role": int(data['tier']), "allowed_container" : int(data['ctn_count'])}}))
+        
+    return "a"
 if __name__ == '__main__':
     app.run(debug=True, port=8080)

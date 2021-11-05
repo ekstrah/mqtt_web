@@ -49,7 +49,6 @@ if (userForm) {
 
 
 function create_container_user(userID, userName, userPass) {
-  alert("UserID " + userID + " UserName " + userName + " UserPass " + userPass);
   var xhr = new XMLHttpRequest(); 
   var url = "http://localhost:5005/dev/create";
   xhr.open("POST", url, true);
@@ -88,7 +87,6 @@ function delete_container(userID, CTName, port) {
   };
   var data = JSON.stringify(parse_data);
   xhr.send(data);
-  location.reload();
 }
 
 function create_container_simple(userID) {

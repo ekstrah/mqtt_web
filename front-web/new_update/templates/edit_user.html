@@ -60,7 +60,7 @@
                                 <td class="px-6 py-4 whitespace-no-wrap border-b text-blue-500 border-gray-500 text-base leading-5">{{user['num_cont']}}</td>
                                 <td class="px-6 py-4 whitespace-no-wrap border-b text-blue-500 border-gray-500 text-base leading-5">{{user['time-created']}}</td>
                                 <td class="px-6 py-4 whitespace-no-wrap border-b text-blue-500 border-gray-500 text-base leading-5">
-                                    <button class="p-2 pl-5 pr-5 bg-transparent border-2 border-green-500 text-green-500 text-sm rounded-lg hover:bg-green-500 hover:text-gray-100 focus:border-4 focus:border-green-300">Edit</button>
+                                    <button class="p-2 pl-5 pr-5 bg-transparent border-2 border-green-500 text-green-500 text-sm rounded-lg hover:bg-green-500 hover:text-gray-100 focus:border-4 focus:border-green-300" onclick="window.location.href='{{ url_for('complex_view',userName=user['userName'])}}';">Edit</button>
                                 </td>
                             </tr>
 
@@ -113,7 +113,7 @@
                                 <td class="px-6 py-4 whitespace-no-wrap border-b text-blue-500 border-gray-500 text-base leading-5">{{user['num_cont']}}</td>
                                 <td class="px-6 py-4 whitespace-no-wrap border-b text-blue-500 border-gray-500 text-base leading-5">{{user['time-created']}}</td>
                                 <td class="px-6 py-4 whitespace-no-wrap border-b text-blue-500 border-gray-500 text-base leading-5">
-                                    <button class="p-2 pl-5 pr-5 bg-transparent border-2 border-green-500 text-green-500 text-sm rounded-lg hover:bg-green-500 hover:text-gray-100 focus:border-4 focus:border-green-300">Edit</button>
+                                    <button class="p-2 pl-5 pr-5 bg-transparent border-2 border-green-500 text-green-500 text-sm rounded-lg hover:bg-green-500 hover:text-gray-100 focus:border-4 focus:border-green-300" onclick="window.location.href='{{ url_for('complex_view',userName=user['userName'])}}';">Edit</button>
                                 </td>
                             </tr>
                             {% endif %}
@@ -129,24 +129,27 @@
 	<!--actual component end-->
 </div>
 <script>
-    function activate_user(userName) {
-        var xhr = new XMLHttpRequest(); 
-        var url = "http://localhost:5500/activate";
-        xhr.open("POST", url, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState ===4 && xhr.status === 200) {
-                var json = JSON.parse(xhr.responseText);
-                console.log(json)
-            }
-        };
-        const parse_data = {
-            "userName" : userName
+function modify_user(userName){
+    location.href = "/viewAC/"+userName;
+}
+function activate_user(userName) {
+    var xhr = new XMLHttpRequest(); 
+    var url = "http://localhost:5500/activate";
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState ===4 && xhr.status === 200) {
+            var json = JSON.parse(xhr.responseText);
+            console.log(json)
         }
-        var data = JSON.stringify(parse_data);
-        xhr.send(data);
-        location.reload();
+    };
+    const parse_data = {
+        "userName" : userName
     }
+    var data = JSON.stringify(parse_data);
+    xhr.send(data);
+    location.reload();
+}
 </script>
 <script>
 	function setup() {

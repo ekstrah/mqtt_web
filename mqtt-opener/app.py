@@ -3,7 +3,7 @@ import os
 import platform
 import random
 from os import path
-import subprocess
+from subprocess import check_output
 import shutil
 import time
 from flask import Flask, jsonify, request
@@ -21,7 +21,9 @@ CORS(app)
 
 #MongoDB Config
 mongo = PyMongo(app, uri="mongodb://localhost:27017/userID")
+webMongo = PyMongo(app, uri="mongodb://localhost:27017/web")
 db = mongo.db
+wdb = webMongo.db
 
 #Docker Config
 client = docker.from_env()
@@ -32,7 +34,8 @@ run_os = platform.system()
 ABS_PATH = ""
 BASIC_MQTT_CONFIG = ""
 if run_os == "Windows":
-    print("HI")
+    ABS_PATH = "C:/Users/9ts/Desktop/mqtt_web-windows/mqtt-opener/"
+    BASIC_MQTT_CONFIG = ABS_PATH + "/config_basic/."
 else:
     ABS_PATH = os.environ['PWD']
     BASIC_MQTT_CONFIG = ABS_PATH + "/config_basic/."
@@ -1022,15 +1025,12 @@ def create_container(data, CTName=None):
         creds_str = mqtt_user+":"+mqtt_pwd
         with open(tmp_pwd_path, "w", encoding="utf-8") as mqt_config_file:
             mqt_config_file.write(creds_str)
-        subprocess.call(['bash', './mqtt_pwd_gen.sh', tmp_pwd_path])
-        time.sleep(2)
-        subprocess.call(['chmod', '-R', '777', tmp_dir_path])
+        commandy = "mosquitto_passwd -U " + tmp_pwd_path
+        check_output(commandy, shell=True)
         with open(tmp_config_path, "w", encoding="utf-8") as file_config:
             file_config.write(MQTT_CONFIG)
         time.sleep(2)
         fin_tmp_dir_path = tmp_dir_path+"."
-        subprocess.call(['chmod', '-R', '777', tmp_dir_path])
-        subprocess.call(['chmod', '-R', '777', fin_tmp_dir_path])
         time.sleep(2)
         vol = {fin_tmp_dir_path : {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
     if CTName is None:
@@ -1052,10 +1052,31 @@ def hello_world():
     return "<p>Hello, World!</p>"
 
 
+def get_allowed_container(userID):
+    collection = wdb["userAccount"]
+    data = collection.find({"userName" : userID})
+    count_col = db[userID]
+    count_data = count_col.find()
+    used_container = count_data.count()
+    allowed_container = data.count()
+    print(allowed_container, used_container)
+    if allowed_container == -1:
+        return -1
+    if int(used_container) < int(allowed_container):
+        #Yes you can create container :D
+        return -1
+    return 1
+
 @app.route('/dev/create', methods=['POST', 'GET'])
 def create_dev_new_container():
     if request.method == 'POST':
         data = request.get_json()
+        """
+            - Let's check whether you can create more container
+        """
+        if get_allowed_container(data['userID']) == 1:
+            print("you can't create boi")
+            return jsonify({"action": 'create_mqtt', 'status': '502'})
         if data['userID'] is None:
             return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
         if data['CTName'] != "None":

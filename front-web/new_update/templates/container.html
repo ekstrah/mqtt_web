@@ -148,7 +148,9 @@
         <p>No message published to Broker</p>
     </div>
 {% endif %}
+{% if is_admin == 1 %}
 <div class="mt-10 ml-28"><button class="p-2 pl-5 pr-5 bg-red-500 text-gray-100 text-lg rounded-lg focus:border-4 border-red-300" onclick="delete_container('{{userID}}','{{CTName}}','{{ct_port}}')">Destroy</button></div>
+{% endif %}
 </div>
 
 <script>
