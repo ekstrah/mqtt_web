@@ -1,113 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="mt-10 ml-28 mr-5">
-    <div class="w-full md:w-3/5 mx-auto p-8">
-        <p>Assemble <strong>MQTT Server</strong></p><p id="userName">{{userID}}</p>
-        <div class="shadow-md">
-           <div class="tab w-full overflow-hidden border-t">
-              <input class="absolute opacity-0" id="tab-single-one" type="radio" name="tabs2">
-              <label class="block p-5 leading-normal cursor-pointer" for="tab-single-one">Simple Broker</label>
-              <div class="tab-content overflow-hidden border-l-2 bg-gray-100 border-indigo-500 leading-normal">
-                 <div><p class="p-5">Assemble Simple MQTT Server. It doesn't have any quthentication which means you should not share link or port number to anyone.</p></div>
-                 <div class="bottom-0 right-0"><button class="p-2 pl-5 pr-5 bg-blue-500 text-gray-100 text-lg rounded-lg focus:border-4 border-blue-300"  type="button" onclick="create_container_simple('{{userID}}')">Assemble</button></div>
-              </div>
-           </div>
-           <div class="tab w-full overflow-hidden border-t">
-              <input class="absolute opacity-0" id="tab-single-two" type="radio" name="tabs2">
-              <label class="block p-5 leading-normal cursor-pointer" for="tab-single-two">User Authentication Broker</label>
-              <div class="tab-content overflow-hidden border-l-2 bg-gray-100 border-indigo-500 leading-normal">
-                 <!-- <p class="p-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tenetur, architecto, explicabo perferendis nostrum, maxime impedit atque odit sunt pariatur illo obcaecati soluta molestias iure facere dolorum adipisci eum? Saepe, itaque.</p> -->
-                 <form class="flex flex-col bg-white rounded shadow-lg p-12 mt-12" action="" id="userForm">
-                  <label class="font-semibold text-xs" for="usernameField">Username for MQTT</label>
-                  <input class="flex items-center h-12 px-4 w-64 bg-gray-200 mt-2 rounded focus:outline-none focus:ring-2" type="text" id="mqttUser">
-                  <label class="font-semibold text-xs mt-3" for="passwordField">Password for MQTT</label>
-                  <input class="flex items-center h-12 px-4 w-64 bg-gray-200 mt-2 rounded focus:outline-none focus:ring-2"type="password" id="mqttPass">
-                  <button class="flex items-center justify-center h-12 px-6 w-64 bg-blue-600 mt-8 rounded font-semibold text-sm text-blue-100 hover:bg-blue-700" type="submit" id="btnSubmit">Assemble</button>
-                </form>
-                </div>
-           </div>
-           <div class="tab w-full overflow-hidden border-t">
-              <input class="absolute opacity-0" id="tab-single-three" type="radio" name="tabs2">
-              <label class="block p-5 leading-normal cursor-pointer" for="tab-single-three">Advanced Config Broker</label>
-              <div class="tab-content overflow-hidden border-l-2 bg-gray-100 border-indigo-500 leading-normal">
-                 <p class="p-5">This Functionality is not implemented yet, but it will be available soon. This functionality allows users to have full configuration of MQTT</p>
-              </div>
-           </div>
+  <div class="w-full md:w-3/5 mx-auto p-8">
+    <div class="container signup">
+      <div class="min-h-screen flex mb-4 row-signup">
+        <div class="w-3/5 h-12 row-right">
+
+          <div class="text-dig">
+            <p class="w-full text-base sm:text-lg md:text-xl text-center lg:text-2xl xl:text-5xl">
+              Assemble Your Own<br> Mosquitto Broker
+            </p>
+            <div class="text-center mb-4 w-3/5">
+              <img src="https://cdn.dribbble.com/users/79571/screenshots/5516891/workflow_4x.png">
+            </div>
+          </div>
         </div>
-     </div>
+        <div class="w-2/5  h-12 row-left">
+          <div class="text-singup mb-8">
+            <h2 class="">
+              Assemble Mosquitto Broker
+            </h2>
+          </div>
+          <div class="form-signup-dig">
+            <div class="w-full max-w-xs">
+              <form class="max-w-md mb-4 form-input" method="post">
+                <div class="mb-6">
+                  <label class="block text-left" style="max-width: 400px">
+                    <span class="text-gray-700">MQTT Broker Option</span>
+                    <select class="form-select block w-full mt-1" name="mqttOpt" id="mqttOpt">
+                      <option value="0">Simple Broker</option>
+                      <option value="10">Authentication Broker</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="mb-6">
+                  <label class="block text-red-600 text-xs font-bold mb-2">
+                    Fill in MQTT credential if authentication used
+                  </label>
+                </div>
+                <div class="mb-4">
+                  <label class="block text-grey-darker text-sm font-bold mb-2" for="username">
+                    MQTT Authentication User Name
+                  </label>
+                  <input
+                    class="shadow appearance-none border rounded w-full h-12 py-2 px-3 text-grey-darker leading-tight focus:outline-none focus:shadow-outline"
+                    id="mqttUser" name="mqttUser" type="text" placeholder="Username">
+                </div>
+                <div class="mb-6">
+                  <label class="block text-grey-darker text-sm font-bold mb-2" for="password">
+                    MQTT Authentication User Password
+                  </label>
+                  <input
+                    class="shadow appearance-none border border rounded w-full h-12 py-2 px-3 text-grey-darker mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                    id="mqttPass" name="mqttPass" type="password" placeholder="******************">
+                </div>
+                <div class="mb-6">
+                  <button  class="bg-purple-500 text-white active:bg-purple-600 font-bold uppercase text-base px-8 py-3 rounded-full shadow-md hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150" type="submit">
+                    Sign In
+                  </button>
+                </div>
+              </form>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
-<script>
-const userForm = document.querySelector("#userForm");
-const user = '{{userID}}';
-if (userForm) {
-  userForm.addEventListener("submit", function(e) {
-    var userName = document.getElementById("mqttUser").value
-    var userPass = document.getElementById("mqttPass").value
-    create_container_user(user, userName, userPass);
-  });
-}
-
-
-function create_container_user(userID, userName, userPass) {
-  var xhr = new XMLHttpRequest(); 
-  var url = "http://localhost:5005/dev/create";
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      var json = JSON.parse(xhr.responseText);
-    }
-  };
-  const parse_data = {
-    "type": 1,
-    "userID": userID,
-    "CTName" : "None",
-    "mqtt_user": userName,
-    "mqtt_pwd": userPass
-  };
-  var data = JSON.stringify(parse_data);
-  xhr.send(data);
-}
-function delete_container(userID, CTName, port) {
-  port = parseInt(port);
-  var xhr = new XMLHttpRequest();
-  var url = "http://localhost:5005/dev/delete";
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      var json = JSON.parse(xhr.responseText);
-      console.log(json)
-    }
-  };
-  const parse_data = {
-    "userID": userID,
-    "CTName" : CTName,
-    "port" : port
-  };
-  var data = JSON.stringify(parse_data);
-  xhr.send(data);
-}
-
-function create_container_simple(userID) {
-  var xhr = new XMLHttpRequest(); 
-  var url = "http://localhost:5005/dev/create";
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      var json = JSON.parse(xhr.responseText);
-      console.log(json)
-    }
-  };
-  const parse_data = {
-    "type": 0,
-    "userID": userID,
-    "CTName" : "None"
-  };
-  var data = JSON.stringify(parse_data);
-  xhr.send(data);
-}
-</script>
 
 {% endblock %}

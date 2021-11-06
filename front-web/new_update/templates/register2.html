@@ -13,28 +13,18 @@
                 <!-- Col -->
                 <div class="w-full lg:w-7/12 bg-white p-5 rounded-lg lg:rounded-l-none">
                     <h3 class="pt-4 text-2xl text-center">Create an Account!</h3>
-                    <form class="px-8 pt-6 pb-8 mb-4 bg-white rounded">
+                    <form class="px-8 pt-6 pb-8 mb-4 bg-white rounded" id="userForm" method="post">
                         <div class="mb-4 md:flex md:justify-between">
-                            <div class="mb-4 md:mr-2 md:mb-0">
-                                <label class="block mb-2 text-sm font-bold text-gray-700" for="firstName">
-                                    First Name
-                                </label>
-                                <input
-                                    class="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-                                    id="firstName"
-                                    type="text"
-                                    placeholder="First Name"
-                                />
-                            </div>
                             <div class="md:ml-2">
                                 <label class="block mb-2 text-sm font-bold text-gray-700" for="lastName">
-                                    Last Name
+                                    User Name
                                 </label>
                                 <input
                                     class="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-                                    id="lastName"
+                                    id="username"
+                                    name="username"
                                     type="text"
-                                    placeholder="Last Name"
+                                    placeholder="User Name"
                                 />
                             </div>
                         </div>
@@ -45,6 +35,7 @@
                             <input
                                 class="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
                                 id="email"
+                                name="email"
                                 type="email"
                                 placeholder="Email"
                             />
@@ -57,8 +48,8 @@
                                 <input
                                     class="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 border border-red-500 rounded shadow appearance-none focus:outline-none focus:shadow-outline"
                                     id="password"
+                                    name="password"
                                     type="password"
-                                    placeholder="******************"
                                 />
                                 <p class="text-xs italic text-red-500">Please choose a password.</p>
                             </div>
@@ -68,19 +59,21 @@
                                 </label>
                                 <input
                                     class="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-                                    id="c_password"
+                                    id="confirm"
+                                    name="confirm"
                                     type="password"
                                     placeholder="******************"
                                 />
                             </div>
                         </div>
                         <div class="mb-6 text-center">
-                            <button
+                            <input
                                 class="w-full px-4 py-2 font-bold text-white bg-blue-500 rounded-full hover:bg-blue-700 focus:outline-none focus:shadow-outline"
-                                type="button"
+                                type="submit"
+                                value="Register"
                             >
                                 Register Account
-                            </button>
+                            </input>
                         </div>
                         <hr class="mb-6 border-t" />
                         <div class="text-center">
@@ -106,4 +99,41 @@
     </div>
 </div>
 
+<script>
+/*
+const userForm = document.querySelector("#userForm");
+if (userForm) {
+  userForm.addEventListener("submit", function(e) {
+      var userName = document.getElementById("userName").value;
+      var email = document.getElementById("email").value;
+      var password = document.getElementById("password").value;
+      var c_password = document.getElementById("c_password").value;
+      if (password.localeCompare(c_password) == 0) {
+          alert("User Account Created");
+          create_user(userName, email, password);
+          
+      } else {
+          alert("Password typed incorrectly");
+      }
+  });
+}*/
+function create_user(userName, email, password) {
+    var xhr = new XMLHttpRequest(); 
+    var url = "http://203.250.81.142:20450/register";
+    xhr.open("GET", url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+        var json = JSON.parse(xhr.responseText);
+        }
+    };
+    const parse_data = {
+    "userName": uesrName,
+    "email": email,
+    "password" : password,
+    };
+    var data = JSON.stringify(parse_data);
+    xhr.send(data);
+}
+</script>
 {% endblock %}

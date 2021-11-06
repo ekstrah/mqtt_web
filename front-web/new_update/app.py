@@ -138,9 +138,30 @@ def profile_view():
 
     return render_template("profile.html")
 
-@app.route("/test")
-def test_example():
-    return render_template("test.html")
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == 'POST':
+        userName= request.form.get("username")
+        email = request.form.get('email')
+        password = ""
+        if request.form.get('password') == request.form.get("confirm"):
+            password = request.form.get('password')
+        else:
+            flash("Yo the password and confirm password doesn't match")
+            return redirect(url_for('register'))
+        
+        userInit = {"userName": userName, "password": password, "role": 0, "csrf_token": "None", "email": email, "allowed_container": 0, 'time-created': str(datetime.now())}
+        vl =userCollection.count_documents(userInit)
+        if vl > 0:
+            flash("Either user exist or username is already taken")
+            return redirect(url_for('register'))
+        else:
+            userCollection.insert_one(userInit)
+        flash('Thanks for registering')
+        return redirect(url_for('simplelogin.login'))
+    else:
+        print(request.get_json())
+        return render_template("register2.html")
 
 @app.route("/secret")
 @login_required()
@@ -237,9 +258,24 @@ def isPublic(CTName):
             return 1
     return 0
 
-@app.route("/<userID>/<CTName>", strict_slashes=False)
+@app.route("/mock/<userID>/<CTName>", strict_slashes=False, methods=["GET", "POST"])
 @login_required()
 def topicDisplay(userID, CTName):
+    if request.method == 'POST':
+        parse_data = {}
+        parse_data['userID'] = userID
+        parse_data['CTName'] = CTName
+        ct_DB = dbUserID[userID]
+        CT_object = ct_DB.find_one({"CTName": CTName})
+        if CT_object == None:
+            ct_DB = dbUserID['public']
+            parse_data['userID'] = 'public'
+            CT_object = ct_DB.find_one({"CTName": CTName})
+        parse_data['port'] = CT_object['port']
+        post_json = json.dumps(parse_data)
+        print(post_json)
+        r = requests.post('http://127.0.0.1:20451/dev/delete', json=post_json)
+        return redirect(url_for('home'))
     b_userID = userID
     """
         Check whether the CTName is assigned by public user
@@ -276,12 +312,11 @@ def topicDisplay(userID, CTName):
         - Get Tier
     """
     button_tag=[userID,CTName, str(ct_port)]
-    print(button_tag)
     return render_template("container.html", CTName=CTName, userID=userID, topics=topics, json_topic=json_topic, tier=tier, pub_ip=pub_ip, ct_port=ct_port, total_24=total_24, num_topics=num_topics, change_24=change_24, bef_24=int(total_24-bef_24),button_tag=button_tag)
 
 # Fix the Json view and String view of the database
-@app.route("/<userID>/<CTName>", strict_slashes=False)
-@app.route("/<userID>/<CTName>/<path:topic>/string", strict_slashes=False)
+@app.route("/mock/<userID>/<CTName>", strict_slashes=False)
+@app.route("/mock/<userID>/<CTName>/<path:topic>/string", strict_slashes=False)
 def dbDisplay(userID, CTName, topic):
     if topic == None:
         topicDisplay(userID, CTName)
@@ -294,8 +329,8 @@ def dbDisplay(userID, CTName, topic):
 
 
 
-@app.route("/<userID>/<CTName>/", strict_slashes=False)
-@app.route("/<userID>/<CTName>/<path:topic>/json")
+@app.route("/mock/<userID>/<CTName>/", strict_slashes=False)
+@app.route("/mock/<userID>/<CTName>/<path:topic>/json")
 def dbDisplayJson(userID, CTName, topic):
     msgDB = msgClient[userID]
     col = msgDB[CTName]
@@ -310,14 +345,23 @@ def dbDisplayJson(userID, CTName, topic):
     return render_template('json_view_topic.html', userID=userID, CTName=CTName, topic=topic, keys=keys, table_data=table_data, pub_count=pub_count)
 
 
-@app.route("/viewAC/<userName>")
+@app.route("/viewAC/<userName>", methods=["GET","POST"])
 @login_required(must=[be_admin])
 def complex_view(userName):
-    data = userCollection.find_one({'userName': userName})
-    email = data['email']
-    allowed_container = data['allowed_container']
-    print(data['allowed_container'])
-    return render_template("edit_indiv_user.html", userName=userName, email=email, allowed_container=allowed_container)
+    if request.method == "GET":
+        data = userCollection.find_one({'userName': userName})
+        email = data['email']
+        allowed_container = data['allowed_container']
+        return render_template("edit_indiv_user.html", userName=userName, email=email, allowed_container=allowed_container)
+    elif request.method == "POST":
+        userName = request.form.get("username")
+        email = request.form.get('email')
+        tier = request.form.get('tier')
+        allowed_container = request.form.get('containersNum')
+        userCollection.update_one({'userName': userName}, {"$set" : {"role": int(tier), "allowed_container" : int(allowed_container)}})
+        return redirect(url_for('viewAC'))
+
+        
 
 @app.route("/viewAC/")
 @login_required(must=[be_admin])
@@ -342,43 +386,47 @@ def viewAC():
 app.add_url_rule("/protected", view_func=ProtectedView.as_view("protected"))
 
 
-@app.route("/createC/")
+@app.route("/createC/", methods=["POST", "GET"])
 @login_required()
 def create_container():
     username = get_username()
-    if be_non_free(username) < 0:
-        return render_template("non_free.html")
-    return render_template("create_mqtt.html", userID=username)
-
-
-@app.route("/edit/<userID>")
-def login_test_view():
-    return render_template("register2.html")
-
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    form = RegistrationForm(request.form)
-    if request.method == 'POST' and form.validate():
-        userInit = {"userName": form.username.data, "password": form.password.data, "role": 0, "csrf_token": "None", "email": form.email.data}
-        vl =userCollection.count_documents(userInit)
-        if vl > 0:
-            flash("Either user exist or username is already taken")
-            return redirect(url_for('register'))
+    if request.method == 'GET':
+        if be_non_free(username) < 0:
+            return render_template("non_free.html")
+        return render_template("create_mqtt.html", userID=username)
+    else:
+        test_val = request.form.get("mqttOpt")
+        mqtt_data = {}
+        mqtt_data['CTName'] = "None"
+        mqtt_data['userID'] = username
+        if int(test_val) is 0:
+            #Simple MQTT
+            mqtt_data['type'] = 0
+            post_json = json.dumps(mqtt_data)
+            r = requests.post('http://127.0.0.1:20451/dev/create', json=post_json)
+            return render_template("create_mqtt.html", userID=username)
         else:
-            userCollection.insert_one(userInit)
-        flash('Thanks for registering')
-        return redirect(url_for('simplelogin.login'))
-    return render_template('registration.html', form=form)
+            #Authenticated
+            data_user = request.form.get("mqttUser")
+            data_pwd = request.form.get("mqttPass")
+            #Simple MQTT
+            mqtt_data['type'] = 1
+            mqtt_data['mqtt_user'] = data_user
+            mqtt_data['mqtt_pwd'] = data_pwd
+            post_json = json.dumps(mqtt_data)
+            print(post_json)
+            r = requests.post('http://127.0.0.1:20451/dev/create', json=post_json)
+            return render_template("create_mqtt.html", userID=username)
+
 
 @app.route('/user/update', methods=['GET', 'POST'])
 @login_required(must=[be_admin])
 def updaet_user_account():
     if request.method == 'POST':
         data = request.get_json()
-        print(data['ctn_count'])
-        print(userCollection.update_one({'userName': data['userName']}, {"$set" : {"role": int(data['tier']), "allowed_container" : int(data['ctn_count'])}}))
-        
+        print(data)
+        tData = userCollection.update_one({'userName': data['userName']}, {"$set" : {"role": int(data['tier']), "allowed_container" : int(data['ctn_count'])}})
     return "a"
+
 if __name__ == '__main__':
-    app.run(debug=True, port=8080)
+    app.run(debug=True, host='0.0.0.0', port=20450)

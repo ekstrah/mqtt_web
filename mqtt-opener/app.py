@@ -10,6 +10,7 @@ from flask import Flask, jsonify, request
 import docker
 from flask_pymongo import PyMongo
 from flask_cors import CORS
+import json
 
 #Importing Environment
 
@@ -447,7 +448,6 @@ MQTT_CONFIG = """
 # subscriptions, currently in-flight messages and retained
 # messages.
 # retained_persistence is a synonym for this option.
-persistence true
 
 # The filename to use for the persistent database, not including
 # the path.
@@ -916,8 +916,6 @@ persistence true
 #include_dir
 
 listener 1883
-allow_anonymous false
-persistence true
 password_file /mosquitto/config/password.txt
 """
 
@@ -1009,9 +1007,11 @@ def create_container(data, CTName=None):
         flag = is_port_available(rand_port)
     port_dict = {'1883/tcp' : ('0.0.0.0', rand_port)}
     userID = data["userID"]
-    if data['type'] == 0:
+    print(data['type'])
+    if int(data['type']) == 0:
         vol = {BASIC_MQTT_CONFIG: {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
-    elif data['type'] == 1:
+    elif int(data['type']) == 1:
+        print("password authentication initiated")
         mqtt_user = data['mqtt_user']
         mqtt_pwd = data['mqtt_pwd']
         tmp_dir_path = ABS_PATH + mqtt_user + "/"
@@ -1054,28 +1054,26 @@ def hello_world():
 
 def get_allowed_container(userID):
     collection = wdb["userAccount"]
-    data = collection.find({"userName" : userID})
+    data = collection.find_one({"userName" : userID})
     count_col = db[userID]
     count_data = count_col.find()
     used_container = count_data.count()
-    allowed_container = data.count()
+    allowed_container = int(data['allowed_container'])
     print(allowed_container, used_container)
     if allowed_container == -1:
         return -1
     if int(used_container) < int(allowed_container):
-        #Yes you can create container :D
         return -1
     return 1
 
 @app.route('/dev/create', methods=['POST', 'GET'])
 def create_dev_new_container():
     if request.method == 'POST':
-        data = request.get_json()
+        data = json.loads(request.get_json())
         """
             - Let's check whether you can create more container
         """
         if get_allowed_container(data['userID']) == 1:
-            print("you can't create boi")
             return jsonify({"action": 'create_mqtt', 'status': '502'})
         if data['userID'] is None:
             return jsonify({'action': 'create_mqtt', 'status': 'success', 'message': 'userID invalid', 'statusCode' : -1})
@@ -1093,7 +1091,7 @@ def create_dev_new_container():
 @app.route('/dev/delete', methods=['POST', 'GET'])
 def delete_old_dev_container():
     if request.method == "POST":
-        data = request.get_json()
+        data = json.loads(request.get_json())
         print(data)
         if data['userID'] is None or data['CTName'] is None or data['port'] is None:
             return jsonify({'status': 'error', 'message': 'error in json data'})
@@ -1134,4 +1132,4 @@ def initialize_default_public_mqtt_broker():
 
 initialize_default_public_mqtt_broker()
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5005)
+    app.run(debug=True, host='0.0.0.0', port=20451)

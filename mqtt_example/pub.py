@@ -13,8 +13,8 @@ import random
 broker_address="127.0.0.1" 
 #broker_address="iot.eclipse.org" #use external broker
 client = mqtt.Client() #create new instance
-client.username_pw_set(username="uou", password="password")
-client.connect("203.250.81.142", port=1883) #connect to broker
+#client.username_pw_set(username="uou", password="password")
+client.connect("203.250.81.142", port=20119) #connect to broker
 data = {}
 data['temp'] = random.randint(1, 500)
 data['location'] = "Ulsan"

@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="mt-3 ml-28">
-<form class="w-full max-w-lg" id="userForm" action="">
+<form class="w-full max-w-lg" id="userForm" method="post">
   <div class="flex flex-wrap -mx-3 mb-6">
     <div class="w-full md:w-1/2 px-3 mb-6 md:mb-0">
       <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-first-name">
         User Name
       </label>
-      <input class="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" id="userName" type="text" value="{{userName}}">
+      <input class="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white" id="username" name="username"type="text" value="{{userName}}">
     </div>
     <div class="w-full md:w-1/2 px-3">
       <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-last-name">
         email
       </label>
-      <input type="email" value="{{email}}" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-last-name" type="text">
+      <input type="email" value="{{email}}" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="email" name="email" type="email">
     </div>
   </div>
   <div class="flex flex-wrap -mx-3 mb-2">
@@ -22,7 +22,7 @@
         Role
       </label>
       <div class="relative">
-        <select class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="tier">
+        <select class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="tier" name="tier">
           <option value="1">Free</option>
           <option value="3">Pro</option>
           <option value="5">Admin</option>
@@ -37,7 +37,7 @@
       <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-zip">
         # Container
       </label>
-      <input type="number" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="containersNum" value="{{allowed_container | int}}">
+      <input type="number" class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="containersNum" name="containersNum" value="{{allowed_container | int}}">
     </div>
   </div>
   <button class="p-2 pl-5 pr-5 bg-green-500 text-gray-100 text-lg rounded-lg focus:border-4 border-green-300"  type="submit" id="btnSubmit">Success</button>
@@ -45,37 +45,4 @@
 </div>
 
 
-<script>
-const userForm = document.querySelector("#userForm");
-if (userForm) {
-  userForm.addEventListener("submit", function(e) {
-    var userName = '{{userName}}';
-    var email = '{{email}}';
-    var tier = document.getElementById("tier").value;
-    var ctn_count = document.getElementById("containersNum").value;
-    alert(ctn_count);
-    update_user(userName, email, tier, ctn_count);
-  });
-}
-
-function update_user(userName, email, tier, ctn_count) {
-    var xhr = new XMLHttpRequest(); 
-    var url = "http://localhost:8080/user/update";
-    xhr.open("POST", url, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      var json = JSON.parse(xhr.responseText);
-    }
-  };
-  const parse_data = {
-      "userName" : userName,
-      "email" : email,
-      "tier" : tier,
-      "ctn_count" : ctn_count
-  }
-    var data = JSON.stringify(parse_data);
-    xhr.send(data);
-}
-</script>
 {% endblock %}

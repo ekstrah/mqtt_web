@@ -149,31 +149,8 @@
     </div>
 {% endif %}
 {% if is_admin == 1 %}
-<div class="mt-10 ml-28"><button class="p-2 pl-5 pr-5 bg-red-500 text-gray-100 text-lg rounded-lg focus:border-4 border-red-300" onclick="delete_container('{{userID}}','{{CTName}}','{{ct_port}}')">Destroy</button></div>
+<div class="mt-10 ml-28"><form method="post" id="myForm"><button class="p-2 pl-5 pr-5 bg-red-500 text-gray-100 text-lg rounded-lg focus:border-4 border-red-300" onsubmit="return confirm('Are you sure you want to submit?');">Destroy</button><form></div>
 {% endif %}
 </div>
 
-<script>
-  function delete_container(userID, CTName, port) {
-    port = parseInt(port);
-    var xhr = new XMLHttpRequest();
-    var url = "http://localhost:5005/dev/delete";
-    xhr.open("POST", url, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        var json = JSON.parse(xhr.responseText);
-        console.log(json)
-      }
-    };
-    const parse_data = {
-      "userID": userID,
-      "CTName" : CTName,
-      "port" : port
-    };
-    var data = JSON.stringify(parse_data);
-    xhr.send(data);
-    alert("It might take few seconds to take effect");
-  }
-</script>
 {% endblock %}
