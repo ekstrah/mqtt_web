@@ -9,6 +9,7 @@ import time
 from flask import Flask, jsonify, request
 import docker
 from flask_pymongo import PyMongo
+import pymongo
 from flask_cors import CORS
 import json
 
@@ -21,10 +22,13 @@ app = Flask(__name__)
 CORS(app)
 
 #MongoDB Config
-mongo = PyMongo(app, uri="mongodb://127.0.0.1/userID")
-webMongo = PyMongo(app, uri="mongodb://127.0.0.1/web")
-db = mongo.db
-wdb = webMongo.db
+# mongo = PyMongo(app, uri="mongodb://172.17.0.1/userID")
+# webMongo = PyMongo(app, uri="mongodb://172.17.0.1/web")
+
+mongo = pymongo.MongoClient("mongodb://172.17.0.1:27017/")
+webMongo = pymongo.MongoClient("mongodb://172.17.0.1:27017/")
+db = mongo['userID']
+wdb = webMongo['web']
 
 #Docker Config
 client = docker.from_env()

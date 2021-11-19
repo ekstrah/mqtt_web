@@ -1,0 +1,30 @@
+version: '3'
+services:
+  web:
+    image: ekstrah/mqtt_front:latest
+    ports:
+      - "20450:20450"
+    depends_on:
+      - "db1"
+      - "db2"
+      - "db3"
+  db1:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+  db2:
+    image: mongo:latest
+    ports:
+      - "27018:27017"
+  db3:
+    image: mongo:latest
+    ports:
+      - "27019:27017"
+  # test:
+  #   image: ekstrah/test
+  #   volumes:
+  #     - type: bind
+  #       source: /var/run/docker.sock
+  #       target: /var/run/docker.sock
+  #   ports:
+  #     - "20451:20451"
