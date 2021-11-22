@@ -938,13 +938,14 @@ def monitor_mqtt_broker(userID, CTName, port):
     CT_ip = container.attrs['NetworkSettings']['IPAddress']
     container_query = collection.find_one({"userID": CT_user, "CTName": CTName})
     CTCreds = container_query['CTCreds']
+    porty = container_query['prot']
     if CTCreds == 0:
-        arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + "#" + " --ctname " + CTName + " --cred " + str(CTCreds)
+        arg_cmd = "--port " + porty + " --user " + CT_user + " --ip " + CT_ip + " --topic " + "#" + " --ctname " + CTName + " --cred " + str(CTCreds)
     else:
         mqttuser = container_query['container_cred_user']
         mqttpwd = container_query['container_cred_pwd']
         arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + "#" + " --ctname " + CTName + " --cred " + str(CTCreds) + " --mqttU " + mqttuser + " --mqttP " + mqttpwd
-    ctn = client.containers.run("ekstrah/monitor-api:0.2", arg_cmd,  detach=True, auto_remove=True)
+    ctn = client.containers.run("ekstrah/monitor-api:latest", arg_cmd,  detach=True, auto_remove=True)
     return ctn
 
 def database_controller_monitor_update(resp_data, userID, ctn_name):
@@ -1037,7 +1038,7 @@ def create_container(data, CTName=None):
         time.sleep(2)
         vol = {fin_tmp_dir_path : {'bind' : '/mosquitto/config/.', 'mode': 'rw'}}
     if CTName is None:
-        container = client.containers.run(image='eclipse-mosquitto:2.0.13', detach=True, ports=port_dict, volumes=vol)
+        container = client.containers.run(image='eclipse-mosquitto:2.0.13', detach=True, ports=port_dict)
         CTName = container.name
     else:
         container = client.containers.run(image='eclipse-mosquitto:2.0.13', detach=True, ports=port_dict, volumes=vol, name=CTName)

@@ -1,11 +1,23 @@
-FROM ekstrah/ubuntu_mqtt_back:latest
+FROM ubuntu:latest
 
 WORKDIR /tmp
 
 COPY . .
 
-EXPOSE 20451
+RUN apt update
+
+RUN apt install -y software-properties-common
+
+RUN add-apt-repository ppa:mosquitto-dev/mosquitto-ppa
+
+RUN apt update
+
+RUN apt install -y python3 python3-pip mosquitto docker.io
 
 RUN pip3 install -r ./requirements.txt
 
-ENTRYPOINT [ "bash" ]
+EXPOSE 20451
+
+ENTRYPOINT ["tail"]
+
+CMD ["-f","/dev/null"]

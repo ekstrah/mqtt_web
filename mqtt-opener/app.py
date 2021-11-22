@@ -934,6 +934,7 @@ def monitor_mqtt_broker(userID, CTName, port):
     CT_ip = container.attrs['NetworkSettings']['IPAddress']
     container_query = collection.find_one({"userID": CT_user, "CTName": CTName})
     CTCreds = container_query['CTCreds']
+    porty = container_query['prot']
     if CTCreds == 0:
         arg_cmd = "--user " + CT_user + " --ip " + CT_ip + " --topic " + "#" + " --ctname " + CTName + " --cred " + str(CTCreds)
     else:
