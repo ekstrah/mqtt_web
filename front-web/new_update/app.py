@@ -54,9 +54,9 @@ test_init_account = {
   "email": "test@ekstrah.com",
 }
 
-client = pymongo.MongoClient("mongodb://172.17.0.1:27017/")
-msgClient = pymongo.MongoClient("mongodb://172.17.0.1:27018/")
-logClient = pymongo.MongoClient("mongodb://172.17.0.1:27019/")
+client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
+msgClient = pymongo.MongoClient("mongodb://127.0.0.1:27018/")
+logClient = pymongo.MongoClient("mongodb://127.0.0.1:27019/")
 dbUserID = client['userID']
 app = Flask(__name__)
 CORS(app)
@@ -199,6 +199,7 @@ def is_admin():
         port = container['port']
         CTName = container['CTName']
         dbController = container['dbController']
+        user = container['userID']
         t_dict = {'userID': user, 'port': port, 'CTName': CTName, 'Status': 'Active', "button_tag": [user, CTName, str(port)], "dbController": dbController}
         resp_body.append(t_dict)
         count += 1
@@ -274,7 +275,7 @@ def topicDisplay(userID, CTName):
         parse_data['port'] = CT_object['port']
         post_json = json.dumps(parse_data)
         print(post_json)
-        r = requests.post('http://172.17.0.1:20451/dev/delete', json=post_json)
+        r = requests.post('http://127.0.0.1:20451/dev/delete', json=post_json)
         return redirect(url_for('home'))
     b_userID = userID
     """
@@ -403,7 +404,7 @@ def create_container():
             #Simple MQTT
             mqtt_data['type'] = 0
             post_json = json.dumps(mqtt_data)
-            r = requests.post('http://172.17.0.1:20451/dev/create', json=post_json)
+            r = requests.post('http://127.0.0.1:20451/dev/create', json=post_json)
             return render_template("create_mqtt.html", userID=username)
         else:
             #Authenticated
@@ -415,7 +416,7 @@ def create_container():
             mqtt_data['mqtt_pwd'] = data_pwd
             post_json = json.dumps(mqtt_data)
             print(post_json)
-            r = requests.post('http://172.17.0.1:20451/dev/create', json=post_json)
+            r = requests.post('http://127.0.0.1:20451/dev/create', json=post_json)
             return render_template("create_mqtt.html", userID=username)
 
 
@@ -427,6 +428,10 @@ def updaet_user_account():
         print(data)
         tData = userCollection.update_one({'userName': data['userName']}, {"$set" : {"role": int(data['tier']), "allowed_container" : int(data['ctn_count'])}})
     return "a"
+
+@app.route("/test")
+def test():
+    return render_template("index_t.html")
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=20450)

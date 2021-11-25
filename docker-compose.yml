@@ -1,36 +1,44 @@
 version: '3'
 services:
   web:
-    image: ekstrah/mqtt_front:latest
+    build: ./front-web/new_update
     ports:
       - "20450:20450"
     depends_on:
       - "db1"
       - "db2"
       - "db3"
+    networks:
+      - default
 
   db1:
     image: mongo:latest
     ports:
       - "27017:27017"
+    networks:
+      - default
 
   db2:
     image: mongo:latest
     ports:
       - "27018:27017"
+    networks:
+      - default
 
   db3:
     image: mongo:latest
     ports:
       - "27019:27017"
+    networks:
+      - default
 
-  test:
-    image: ekstrah/test:latest
-    volumes:
-      - type: bind
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
-    ports:
-      - "20451:20451"
-    depends_on:
-      - web
+  # test:
+  #   image: ekstrah/test:latest
+  #   volumes:
+  #     - type: bind
+  #       source: /var/run/docker.sock
+  #       target: /var/run/docker.sock
+  #   ports:
+  #     - "20451:20451"
+  #   depends_on:
+  #     - web
