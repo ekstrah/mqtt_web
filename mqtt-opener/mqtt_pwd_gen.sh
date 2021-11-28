@@ -1,1 +1,0 @@
-mosquitto_passwd -U $1

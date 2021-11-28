@@ -16,7 +16,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 # client.username_pw_set(username="asdf", password="asdf")
 # client.connect("mqtt.eclipseprojects.io", 1883, 60)
-client.connect("127.0.0.1", 20151, 60)
+client.connect("127.0.0.1", 1883, 60)
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.

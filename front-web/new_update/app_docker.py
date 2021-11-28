@@ -54,9 +54,9 @@ test_init_account = {
   "email": "test@ekstrah.com",
 }
 
-client = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
-msgClient = pymongo.MongoClient("mongodb://127.0.0.1:27018/")
-logClient = pymongo.MongoClient("mongodb://127.0.0.1:27019/")
+client = pymongo.MongoClient("mongodb://172.17.0.1:27017/")
+msgClient = pymongo.MongoClient("mongodb://172.17.0.1:27018/")
+logClient = pymongo.MongoClient("mongodb://172.17.0.1:27019/")
 dbUserID = client['userID']
 app = Flask(__name__)
 CORS(app)
@@ -275,7 +275,7 @@ def topicDisplay(userID, CTName):
         parse_data['port'] = CT_object['port']
         post_json = json.dumps(parse_data)
         print(post_json)
-        r = requests.post('http://127.0.0.1:20451/dev/delete', json=post_json)
+        r = requests.post('http://172.17.0.1:20451/dev/delete', json=post_json)
         return redirect(url_for('home'))
     b_userID = userID
     """
@@ -404,7 +404,7 @@ def create_container():
             #Simple MQTT
             mqtt_data['type'] = 0
             post_json = json.dumps(mqtt_data)
-            r = requests.post('http://127.0.0.1:20451/dev/create', json=post_json)
+            r = requests.post('http://172.17.0.1:20451/dev/create', json=post_json)
             return render_template("create_mqtt.html", userID=username)
         else:
             #Authenticated
@@ -416,7 +416,7 @@ def create_container():
             mqtt_data['mqtt_pwd'] = data_pwd
             post_json = json.dumps(mqtt_data)
             print(post_json)
-            r = requests.post('http://127.0.0.1:20451/dev/create', json=post_json)
+            r = requests.post('http://172.17.0.1:20451/dev/create', json=post_json)
             return render_template("create_mqtt.html", userID=username)
 
 
