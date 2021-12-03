@@ -1,6 +1,6 @@
 from requests import get as get_ip
 import requests
-from flask import Flask, jsonify, render_template, request, redirect, flash, url_for
+from flask import Flask, jsonify, render_template, request, redirect, flash, url_for, make_response
 from flask.views import MethodView
 from flask_simplelogin import SimpleLogin, get_username, login_required
 import pymongo
@@ -8,6 +8,9 @@ from flask_cors import CORS
 from wtforms import Form, BooleanField, StringField, PasswordField, validators
 import json
 from datetime import datetime
+import pandas as pd
+import markdown
+import markupsafe
 
 
 new_init_account = {
@@ -297,6 +300,8 @@ def topicDisplay(userID, CTName):
             json_topic[topic]= 0
     json_keys = list(json_topic.keys())
 
+    #Getting total amount of messages received
+
     # Getting Tier
     tier = get_role(b_userID)
     ct_DB = dbUserID[userID]
@@ -325,8 +330,38 @@ def dbDisplay(userID, CTName, topic):
     col = msgDB[CTName]
     dbData = col.find({"topic": topic})
     pub_count = dbData.count()
-    table_data = []
-    return render_template("string_view_topic.html", userID=userID, CTName=CTName, topic=topic, dbData=dbData, pub_count=pub_count )
+    testDB = col.find({"topic": topic})
+    isJson = True
+    for msg in testDB:
+        try:
+            print(msg["message"])
+            json.loads(msg['message'])
+        except json.decoder.JSONDecodeError:
+            print("error")
+            isJson = False
+            break
+    return render_template("string_view_topic_table.html", userID=userID, CTName=CTName, topic=topic, dbData=dbData, pub_count=pub_count, isJson=isJson )
+
+@app.route("/mock/<userID>/<CTName>", strict_slashes=False)
+@app.route("/mock/<userID>/<CTName>/<path:topic>/string/download", strict_slashes=False)
+def dbDownloadString(userID, CTName, topic):
+    if topic == None:
+        topicDisplay(userID, CTName)
+    msgDB = msgClient[userID]
+    col = msgDB[CTName]
+    dbData = col.find({"topic": topic})
+    dwn_file = []
+    for msg in dbData:
+        tmp = {}
+        tmp["msg"] = msg["message"]
+        tmp["time-stamp"] = msg["time-stamp"]
+        dwn_file.append(tmp)
+    df = pd.DataFrame(dwn_file)
+    resp = make_response(df.to_csv(index=False))
+    resp.headers["Content-Disposition"] = "attachment; filename="+userID +"_" + topic + "_string.csv"
+    resp.headers["Content-Type"] = "text/csv"
+    return resp
+
 
 
 
@@ -345,6 +380,25 @@ def dbDisplayJson(userID, CTName, topic):
     pub_count = dbData.count()
     return render_template('json_view_topic.html', userID=userID, CTName=CTName, topic=topic, keys=keys, table_data=table_data, pub_count=pub_count)
 
+
+@app.route("/mock/<userID>/<CTName>/", strict_slashes=False)
+@app.route("/mock/<userID>/<CTName>/<path:topic>/json/download")
+def dbDownloadJson(userID, CTName, topic):
+    msgDB = msgClient[userID]
+    col = msgDB[CTName]
+    dbData = col.find({"topic": topic})
+    table_data = []
+    for data in dbData:
+        table_data.append(json.loads(data['message']))
+    s_data = col.find({"topic": topic})
+    dummy_key = s_data[0]
+    dict_keys = json.loads(dummy_key['message'])
+    keys = list(dict_keys.keys())
+    df = pd.DataFrame(table_data)
+    resp = make_response(df.to_csv(index=False))
+    resp.headers["Content-Disposition"] = "attachment; filename="+userID +"_" + topic + "_json.csv"
+    resp.headers["Content-Type"] = "text/csv"
+    return resp
 
 @app.route("/viewAC/<userName>", methods=["GET","POST"])
 @login_required(must=[be_admin])
@@ -400,7 +454,7 @@ def create_container():
         mqtt_data = {}
         mqtt_data['CTName'] = "None"
         mqtt_data['userID'] = username
-        if int(test_val) is 0:
+        if int(test_val) == 0:
             #Simple MQTT
             mqtt_data['type'] = 0
             post_json = json.dumps(mqtt_data)
@@ -429,9 +483,9 @@ def updaet_user_account():
         tData = userCollection.update_one({'userName': data['userName']}, {"$set" : {"role": int(data['tier']), "allowed_container" : int(data['ctn_count'])}})
     return "a"
 
-@app.route("/test")
-def test():
-    return render_template("index_t.html")
+@app.route("/help")
+def help():
+    return redirect('https://ekstrah.notion.site/MQTT-Broker-Wiki-37f0516e51834a1590912f81cb5348ff')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=20450)
